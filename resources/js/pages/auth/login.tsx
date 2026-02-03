@@ -1,16 +1,12 @@
 import { Form, Head } from '@inertiajs/react';
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { register } from '@/routes';
 import { store } from '@/routes/login';
-import { request } from '@/routes/password';
 
 type Props = {
     status?: string;
@@ -20,8 +16,6 @@ type Props = {
 
 export default function Login({
     status,
-    canResetPassword,
-    canRegister,
 }: Props) {
     return (
         <AuthLayout
@@ -52,7 +46,7 @@ export default function Login({
                         />
                     </div>
                     <CardTitle className="text-2xl">Log in to your account</CardTitle>
-                    <CardDescription className="text-base">Enter your email and password below to log in</CardDescription>
+                    <CardDescription className="text-base">Enter your Username and password to log in</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8">
                     <Form
@@ -64,33 +58,23 @@ export default function Login({
                             <>
                                 <div className="grid gap-6">
                                     <div className="grid gap-3">
-                                        <Label htmlFor="email" className="text-base">Email address</Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            name="email"
-                                            required
-                                            autoFocus
-                                            tabIndex={1}
-                                            autoComplete="email"
-                                            placeholder="email@example.com"
-                                            className="h-11 text-base"
-                                        />
-                                        <InputError message={errors.email} />
+                                        <Label htmlFor="username" className="text-base">Username</Label>
+                                            <Input
+                                                id="username"
+                                                type="text"
+                                                name="username"
+                                                required
+                                                autoFocus
+                                                tabIndex={1}
+                                                placeholder="Username"
+                                                className="h-11 text-base"
+                                            />
+                                        <InputError message={errors.username} />
                                     </div>
 
                                     <div className="grid gap-3">
                                         <div className="flex items-center">
                                             <Label htmlFor="password" className="text-base">Password</Label>
-                                            {/* {canResetPassword && (
-                                                <TextLink
-                                                    href={request()}
-                                                    className="ml-auto text-base"
-                                                    tabIndex={5}
-                                                >
-                                                    Forgot password?
-                                                </TextLink>
-                                            )} */}
                                         </div>
                                         <Input
                                             id="password"
@@ -105,16 +89,6 @@ export default function Login({
                                         <InputError message={errors.password} />
                                     </div>
 
-                                    {/* <div className="flex items-center space-x-3">
-                                        <Checkbox
-                                            id="remember"
-                                            name="remember"
-                                            tabIndex={3}
-                                            className="h-5 w-5"
-                                        />
-                                        <Label htmlFor="remember" className="text-base">Remember me</Label>
-                                    </div> */}
-
                                     <Button
                                         type="submit"
                                         className="mt-4 w-full h-12 text-base"
@@ -126,15 +100,6 @@ export default function Login({
                                         Log in
                                     </Button>
                                 </div>
-
-                                {canRegister && (
-                                    <div className="text-center text-base text-muted-foreground">
-                                        Don't have an account?{' '}
-                                        <TextLink href={register()} tabIndex={5} className="text-base">
-                                            Sign up
-                                        </TextLink>
-                                    </div>
-                                )}
                             </>
                         )}
                     </Form>
