@@ -4,44 +4,57 @@ import type { AuthLayoutProps, SharedData } from '@/types';
 
 export default function AuthSplitLayout({
     children,
-    title,
-    description,
 }: AuthLayoutProps) {
     const { name } = usePage<SharedData>().props;
 
     return (
-        <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-                <div className="absolute inset-0 bg-zinc-900" />
-                <div className="relative z-20 flex items-center">
-                    <img 
-                        src="/images/jrrmc_logo.svg" 
-                        alt="JRRMC Logo" 
-                        className="h-32 w-auto"
+        <div className="relative grid min-h-dvh grid-cols-1 lg:grid-cols-2">
+            <div className="relative hidden h-full min-h-dvh flex-col p-10 text-white lg:flex">
+                <video
+                    className="absolute inset-0 h-full w-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                >
+                    <source src="/videos/jrfacade.mp4" type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 bg-zinc-900/20" />
+
+                <div className="relative z-20">
+                    <img
+                        src="/images/jrrmc_logo.svg"
+                        alt="JRRMC Logo"
+                        className="h-40 w-auto drop-shadow-2xl"
                     />
                 </div>
             </div>
-            <div className="w-full lg:p-8">
-                <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                    <Link
-                        href={home()}
-                        className="relative z-20 flex items-center justify-center lg:hidden"
-                    >
-                        <img 
-                            src="/images/jrrmc_logo.svg" 
-                            alt="JRRMC Logo" 
-                            className="h-40 w-auto sm:h-48"
-                        />
-                    </Link>
-                    <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">
-                        <h1 className="text-xl font-medium">{title}</h1>
-                        <p className="text-sm text-balance text-muted-foreground">
-                            {description}
-                        </p>
-                    </div>
-                    {children}
-                </div>
-            </div>
+
+<div
+    className="min-h-dvh transition-[background] duration-300"
+    onMouseMove={(e) => {
+        const { left, top, width, height } =
+            e.currentTarget.getBoundingClientRect();
+
+        const x = ((e.clientX - left) / width) * 100;
+        const y = ((e.clientY - top) / height) * 100;
+
+        e.currentTarget.style.background =
+            `radial-gradient(circle at ${x}% ${y}%, 
+                #fde68a 0%, 
+                #fdba74 35%, 
+                #f59e0b 70%)`;
+    }}
+    onMouseLeave={(e) => {
+        e.currentTarget.style.background =
+            'linear-gradient(135deg, #fde68a, #fdba74, #f59e0b)';
+    }}
+>
+    <div className="flex min-h-dvh items-center justify-center px-8">
+        {children}
+    </div>
+</div>
+
         </div>
     );
 }

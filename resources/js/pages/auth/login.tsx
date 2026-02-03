@@ -82,7 +82,7 @@ export default function Login({
                                     <div className="grid gap-3">
                                         <div className="flex items-center">
                                             <Label htmlFor="password" className="text-base">Password</Label>
-                                            {canResetPassword && (
+                                            {/* {canResetPassword && (
                                                 <TextLink
                                                     href={request()}
                                                     className="ml-auto text-base"
@@ -90,7 +90,7 @@ export default function Login({
                                                 >
                                                     Forgot password?
                                                 </TextLink>
-                                            )}
+                                            )} */}
                                         </div>
                                         <Input
                                             id="password"
@@ -105,7 +105,7 @@ export default function Login({
                                         <InputError message={errors.password} />
                                     </div>
 
-                                    <div className="flex items-center space-x-3">
+                                    {/* <div className="flex items-center space-x-3">
                                         <Checkbox
                                             id="remember"
                                             name="remember"
@@ -113,7 +113,7 @@ export default function Login({
                                             className="h-5 w-5"
                                         />
                                         <Label htmlFor="remember" className="text-base">Remember me</Label>
-                                    </div>
+                                    </div> */}
 
                                     <Button
                                         type="submit"
