@@ -1,26 +1,51 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Dna, Folder, LayoutGrid, SquareUserRound, Stethoscope, Brain, Accessibility, Hand } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { dashboard, patrecord, registries, trauma, cancer } from '@/routes';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
 
+//Add sidebar navigation items here, including nested children items, copy format below
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Registries',
+        href: registries(),
+        icon: Stethoscope,
+        children: [
+            {
+                title: 'Trauma Registry',
+                href: trauma(),
+                icon: Brain,
+            },
+            {
+                title: 'Cancer Registry',
+                href: cancer(),
+                icon: Dna,
+            },
+            {
+                title: 'Geria Registry',
+                href: cancer(),
+                icon: Accessibility,
+            },
+            {
+                title: 'Skin Registry',
+                href: cancer(),
+                icon: Hand,
+            },
+        ],
+    },
+    {
+        title: 'Patient Records',
+        href: patrecord(),
+        icon: SquareUserRound,
     },
 ];
 
