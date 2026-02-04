@@ -8,6 +8,14 @@ import type { NavItem } from '@/types';
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const { isCurrentUrl } = useCurrentUrl();
 
+    const isParentActive = (item: NavItem) => {
+        if (isCurrentUrl(item.href)) return true;
+        if (item.children) {
+            return item.children.some(child => isCurrentUrl(child.href));
+        }
+        return false;
+    };
+
     return (
         <SidebarGroup className="px-2 py-0">
             <SidebarGroupLabel>Home</SidebarGroupLabel>
@@ -15,7 +23,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                 <SidebarMenu>
                     {items.map((item) =>
                         item.children ? (
-                            <Collapsible key={item.title} asChild defaultOpen={isCurrentUrl(item.href)}>
+                            <Collapsible key={item.title} asChild defaultOpen={isParentActive(item)}>
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton tooltip={{ children: item.title }}>

@@ -42,4 +42,12 @@ Route::get('cancer', function () {
     return Inertia::render('registries/Cancer/cancerRegistry');
 })->middleware(['auth', 'verified'])->name('cancer');
 
+Route::get('geria', function () {
+    return Inertia::render('registries/Geria/geriaRegistry');
+})->middleware(['auth', 'verified'])->name('geria');
+
+Route::get('skin', function () {
+    return Inertia::render('registries/Skin/skinRegistry');
+})->middleware(['auth', 'verified'])->name('skin');
+
 require __DIR__.'/settings.php';
