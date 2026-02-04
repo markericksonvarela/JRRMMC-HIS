@@ -1,15 +1,13 @@
 import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel, getSortedRowModel, SortingState, getFilteredRowModel, ColumnFiltersState } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ArrowUpDown } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { cancer } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
+import { Patient } from '@/types/regs/cancerPatient';
+import { DataTable } from '@/components/datatable';
+import { patientColumns } from './partials/columns';
 import { TableSkeleton } from '@/components/skeleton-table';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -18,208 +16,118 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type Patient = {
-    id: string;
-    name: string;
-    age: number;
-    diagnosis: string;
-    stage: CancerStage;
-    dateRegistered: string;
-    followUpStatus: FollowUpStatus;
-};
+//sample data -- use inertia for backend connection
+const sampleData: Patient[] = [
+    {
+        id: '1',
+        name: 'Juan Dela Cruz',
+        age: 45,
+        diagnosis: 'Lung Cancer',
+        stage: 'Stage II',
+        dateRegistered: '2024-01-15',
+        followUpStatus: 'Form 1',
+    },
+    {
+        id: '2',
+        name: 'Maria Santos',
+        age: 52,
+        diagnosis: 'Breast Cancer',
+        stage: 'Stage III',
+        dateRegistered: '2024-02-20',
+        followUpStatus: 'Form 2',
+    },
+    {
+        id: '3',
+        name: 'Pedro Reyes',
+        age: 38,
+        diagnosis: 'Colon Cancer',
+        stage: 'Stage I',
+        dateRegistered: '2024-03-10',
+        followUpStatus: 'Form 3',
+    },
+    {
+        id: '4',
+        name: 'Ana Cruz',
+        age: 60,
+        diagnosis: 'Liver Cancer',
+        stage: 'Stage IV',
+        dateRegistered: '2024-03-15',
+        followUpStatus: 'Form 4',
+    },
+    {
+        id: '5',
+        name: 'Jose Garcia',
+        age: 48,
+        diagnosis: 'Stomach Cancer',
+        stage: 'Stage II',
+        dateRegistered: '2024-03-20',
+        followUpStatus: 'Form 1',
+    },
+];
 
-export type CancerStage = 'Stage I' | 'Stage II' | 'Stage III' | 'Stage IV';
-export type FollowUpStatus = 'Form 4 - Initial Follow Up' | 'Form 2' | 'Form 1';
-
-const columns: ColumnDef<Patient>[] = [
+// can be adjusted to followups
+const formTabs = [
     {
-        accessorKey: 'name',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                >
-                    Patient Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
+        label: 'All',
+        value: 'all',
+        filterKey: 'followUpStatus',
     },
     {
-        accessorKey: 'age',
-        header: 'Age',
+        label: 'Form 1',
+        value: 'form1',
+        filterKey: 'followUpStatus',
+        filterValue: 'Form 1',
     },
     {
-        accessorKey: 'diagnosis',
-        header: 'Diagnosis',
+        label: 'Form 2',
+        value: 'form2',
+        filterKey: 'followUpStatus',
+        filterValue: 'Form 2',
     },
     {
-        accessorKey: 'stage',
-        header: 'Stage',
+        label: 'Form 3',
+        value: 'form3',
+        filterKey: 'followUpStatus',
+        filterValue: 'Form 3',
     },
     {
-        accessorKey: 'dateRegistered',
-        header: 'Date Registered',
-    },
-    {
-        accessorKey: 'followUpStatus',
-        header: 'Follow Up Status',
+        label: 'Form 4',
+        value: 'form4',
+        filterKey: 'followUpStatus',
+        filterValue: 'Form 4',
     },
 ];
 
 export default function CancerRegistry() {
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<Patient[]>([]);
 
-    // sample data -- replace with inertia when data is ready
+    // sample data -- use inertia for backend connection
     useEffect(() => {
         const timer = setTimeout(() => {
-            setData([
-                {
-                    id: '1',
-                    name: 'Juan Dela Cruz',
-                    age: 45,
-                    diagnosis: 'Lung Cancer',
-                    stage: 'Stage II',
-                    dateRegistered: '2024-01-15',
-                    followUpStatus: 'Form 4 - Initial Follow Up',
-                },
-                {
-                    id: '2',
-                    name: 'Maria Santos',
-                    age: 52,
-                    diagnosis: 'Breast Cancer',
-                    stage: 'Stage III',
-                    dateRegistered: '2024-02-20',
-                    followUpStatus: 'Form 2',
-                },
-                {
-                    id: '3',
-                    name: 'Pedro Reyes',
-                    age: 38,
-                    diagnosis: 'Colon Cancer',
-                    stage: 'Stage I',
-                    dateRegistered: '2024-03-10',
-                    followUpStatus: 'Form 1',
-                },
-            ]);
+            setData(sampleData);
             setIsLoading(false);
-        }, 2000); // Simulates 2 second loading time
+        }, 2000); // data loading for skeleton effect
 
         return () => clearTimeout(timer);
     }, []);
 
-    const table = useReactTable({
-        data,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        state: {
-            sorting,
-            columnFilters,
-        },
-    });
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cancer Registry" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="mb-4">
-                    {isLoading ? (
-                        <Skeleton className="h-10 w-full max-w-sm" />
-                    ) : (
-                        <Input
-                            placeholder="Filter by patient name..."
-                            value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-                            onChange={(event) =>
-                                table.getColumn('name')?.setFilterValue(event.target.value)
-                            }
-                            className="max-w-sm"
-                        />
-                    )}
-                </div>
-
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-4">
                 {isLoading ? (
-                    <TableSkeleton rows={5} columns={5} />
+                    <Card className="border border-sidebar-border/70">
+                        <TableSkeleton rows={5} columns={7} />
+                    </Card>
                 ) : (
-                    <div className="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <Table>
-                            <TableHeader>
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                    <TableRow key={headerGroup.id}>
-                                        {headerGroup.headers.map((header) => {
-                                            return (
-                                                <TableHead key={header.id}>
-                                                    {header.isPlaceholder
-                                                        ? null
-                                                        : flexRender(
-                                                              header.column.columnDef.header,
-                                                              header.getContext()
-                                                          )}
-                                                </TableHead>
-                                            );
-                                        })}
-                                    </TableRow>
-                                ))}
-                            </TableHeader>
-                            <TableBody>
-                                {table.getRowModel().rows?.length ? (
-                                    table.getRowModel().rows.map((row) => (
-                                        <TableRow
-                                            key={row.id}
-                                            data-state={row.getIsSelected() && 'selected'}
-                                        >
-                                            {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id}>
-                                                    {flexRender(
-                                                        cell.column.columnDef.cell,
-                                                        cell.getContext()
-                                                    )}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={columns.length}
-                                            className="h-24 text-center"
-                                        >
-                                            No results.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                )}
-
-                {!isLoading && (
-                    <div className="flex items-center justify-end space-x-2 py-4">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            Previous
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            Next
-                        </Button>
-                    </div>
+                    <DataTable
+                        columns={patientColumns}
+                        data={data}
+                        filterColumn="name"
+                        filterPlaceholder="Search Patient"
+                        tabs={formTabs}
+                    />
                 )}
             </div>
         </AppLayout>
