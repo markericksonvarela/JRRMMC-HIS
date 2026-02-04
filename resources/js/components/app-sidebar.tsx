@@ -4,11 +4,11 @@ import { BookOpen, Dna, Folder, LayoutGrid, SquareUserRound, Stethoscope, Brain,
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { dashboard, patrecord, registries, trauma, cancer } from '@/routes';
+import { dashboard, patrecord, registries, trauma, cancer, geria, skin } from '@/routes';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
 
-//Add sidebar navigation items here, including nested children items, copy format below
+//Add sidebar navigation items here, including nested children items, copy format below, add to import as per href
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -32,12 +32,12 @@ const mainNavItems: NavItem[] = [
             },
             {
                 title: 'Geria Registry',
-                href: cancer(),
+                href: geria(),
                 icon: Accessibility,
             },
             {
                 title: 'Skin Registry',
-                href: cancer(),
+                href: skin(),
                 icon: Hand,
             },
         ],
@@ -49,6 +49,7 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+//for reference
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
