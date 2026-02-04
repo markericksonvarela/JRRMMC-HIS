@@ -50,4 +50,18 @@ Route::get('skin', function () {
     return Inertia::render('registries/Skin/skinRegistry');
 })->middleware(['auth', 'verified'])->name('skin');
 
+//ADMISSION
+Route::get('admission', function () {
+    return Inertia::render('admission/admissionDatatable');
+})->middleware(['auth', 'verified'])->name('admission');
+
+//EMERGENCY
+Route::get('emergency', function () {
+    return Inertia::render('emergency/emergencyDatatable');
+})->middleware(['auth', 'verified'])->name('emergency');
+
+//OUTPATIENT
+Route::get('outpatient', function () {
+    return Inertia::render('outpatient/outpatientDatatable');
+})->middleware(['auth', 'verified'])->name('outpatient');
 require __DIR__.'/settings.php';
