@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel, getSortedRowModel, SortingState, getFilteredRowModel, ColumnFiltersState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { ArrowUpDown } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { admission } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -16,79 +17,64 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type Patient = {
-    id: string;
-    name: string;
-    age: number;
-    diagnosis: string;
-    stage: string;
-    dateRegistered: string;
+type AdmissionLog = {
+    enccode: string;
+    hpercode: string;
 };
 
-//sample data
-const data: Patient[] = [
+const columns: ColumnDef<AdmissionLog>[] = [
     {
-        id: '1',
-        name: 'Juan Dela Cruz',
-        age: 45,
-        diagnosis: 'Lung Cancer',
-        stage: 'Stage II',
-        dateRegistered: '2024-01-15',
-    },
-    {
-        id: '2',
-        name: 'Maria Santos',
-        age: 52,
-        diagnosis: 'Breast Cancer',
-        stage: 'Stage III',
-        dateRegistered: '2024-02-20',
-    },
-    {
-        id: '3',
-        name: 'Pedro Reyes',
-        age: 38,
-        diagnosis: 'Colon Cancer',
-        stage: 'Stage I',
-        dateRegistered: '2024-03-10',
-    },
-];
-
-const columns: ColumnDef<Patient>[] = [
-    {
-        accessorKey: 'name',
+        accessorKey: 'enccode',
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                 >
-                    Patient Name
+                    Encounter Code
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             );
         },
     },
     {
-        accessorKey: 'age',
-        header: 'Age',
-    },
-    {
-        accessorKey: 'diagnosis',
-        header: 'Diagnosis',
-    },
-    {
-        accessorKey: 'stage',
-        header: 'Stage',
-    },
-    {
-        accessorKey: 'dateRegistered',
-        header: 'Date Registered',
+        accessorKey: 'hpercode',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                >
+                    Patient Code
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            );
+        },
     },
 ];
 
-export default function CancerRegistry() {
+export default function AdmissionIndex() {
+    const [data, setData] = useState<AdmissionLog[]>([]);
+    const [loading, setLoading] = useState(true);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+    // Fetch data from Laravel backend
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get('/admission/index');
+                setData(response.data.data); // DataTables returns data in data property
+            } catch (error) {
+                console.error('Error fetching admission data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const table = useReactTable({
         data,
@@ -107,14 +93,14 @@ export default function CancerRegistry() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Cancer Registry" />
+            <Head title="Admission Log" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="mb-4">
                     <Input
-                        placeholder="Filter by patient name..."
-                        value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+                        placeholder="Filter by encounter code..."
+                        value={(table.getColumn('enccode')?.getFilterValue() as string) ?? ''}
                         onChange={(event) =>
-                            table.getColumn('name')?.setFilterValue(event.target.value)
+                            table.getColumn('enccode')?.setFilterValue(event.target.value)
                         }
                         className="max-w-sm"
                     />
@@ -141,7 +127,16 @@ export default function CancerRegistry() {
                             ))}
                         </TableHeader>
                         <TableBody>
-                            {table.getRowModel().rows?.length ? (
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={columns.length}
+                                        className="h-24 text-center"
+                                    >
+                                        Loading...
+                                    </TableCell>
+                                </TableRow>
+                            ) : table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
                                     <TableRow
                                         key={row.id}

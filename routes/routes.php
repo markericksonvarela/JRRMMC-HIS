@@ -4,64 +4,45 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\AdmissionController;
 
-//Web Routes
+// PUBLIC ROUTES
+Route::inertia('/', 'auth/login', [
+    'canRegister' => Features::enabled(Features::registration()),
+])->name('home');
 
-Route::get('/', function () {
-    return Inertia::render('welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
-})->name('home');
-
-// Log-in Routes
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 
-Route::post('/logout', [LoginController::class, 'logout'])
-    ->middleware('auth')
-    ->name('logout');
+// AUTH ONLY ROUTES
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    
+    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::inertia('registries', 'registries')->name('registries');
+    Route::inertia('patrecord', 'patrecord')->name('patrecord');
+});
 
-//SIDEBAR NAVIGATION ROUTES
-Route::get('dashboard', function () {
-    return Inertia::render('dashboard');
-})->middleware(['auth'])->name('dashboard');
+// AUTH + VERIFIED ROUTES
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Registries
+    Route::inertia('trauma', 'trauma')->name('trauma');
+    Route::inertia('cancer', 'registries/Cancer/cancerRegistry')->name('cancer');
+    Route::inertia('geria', 'registries/Geria/geriaRegistry')->name('geria');
+    Route::inertia('skin', 'registries/Skin/skinRegistry')->name('skin');
+    
+    // Admission
+    Route::inertia('admission', 'admission/index')->name('admission');
+    Route::get('admission/index', [AdmissionController::class, 'index'])->name('admission.index');
+    Route::post('admissions', [AdmissionController::class, 'store'])->name('admissions.store');
+    Route::get('admissions/{enccode}', [AdmissionController::class, 'show'])->name('admissions.show');
+    Route::put('admissions/{enccode}', [AdmissionController::class, 'update'])->name('admissions.update');
+    Route::delete('admissions/{enccode}', [AdmissionController::class, 'destroy'])->name('admissions.destroy');
+    
+    // Emergency
+    Route::inertia('emergency', 'emergency/emergencyDatatable')->name('emergency');
+    
+    // Outpatient
+    Route::inertia('outpatient', 'outpatient/outpatientDatatable')->name('outpatient');
+});
 
-Route::get('registries', function () {
-    return Inertia::render('registries');
-})->middleware(['auth'])->name('registries');
-
-Route::get('patrecord', function () {
-    return Inertia::render('patrecord');
-})->middleware(['auth'])->name('patrecord');
-
-//REGISTRIES ROUTES
-Route::get('trauma', function () {
-    return Inertia::render('trauma');
-})->middleware(['auth', 'verified'])->name('trauma');
-
-Route::get('cancer', function () {
-    return Inertia::render('registries/Cancer/cancerRegistry');
-})->middleware(['auth', 'verified'])->name('cancer');
-
-Route::get('geria', function () {
-    return Inertia::render('registries/Geria/geriaRegistry');
-})->middleware(['auth', 'verified'])->name('geria');
-
-Route::get('skin', function () {
-    return Inertia::render('registries/Skin/skinRegistry');
-})->middleware(['auth', 'verified'])->name('skin');
-
-//ADMISSION
-Route::get('admission', function () {
-    return Inertia::render('admission/admissionDatatable');
-})->middleware(['auth', 'verified'])->name('admission');
-
-//EMERGENCY
-Route::get('emergency', function () {
-    return Inertia::render('emergency/emergencyDatatable');
-})->middleware(['auth', 'verified'])->name('emergency');
-
-//OUTPATIENT
-Route::get('outpatient', function () {
-    return Inertia::render('outpatient/outpatientDatatable');
-})->middleware(['auth', 'verified'])->name('outpatient');
 require __DIR__.'/settings.php';
