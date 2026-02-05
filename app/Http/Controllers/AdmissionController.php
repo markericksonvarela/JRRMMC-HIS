@@ -7,18 +7,13 @@ use App\Models\AdmissionModel;
 
 class AdmissionController extends Controller
 {
-    // GET /admissions - List all admissions
+    // GET /admissions - GET ALL
     public function index()
     {
-        $admissions = AdmissionModel::select('enccode', 'hpercode')
-            ->paginate(15);
+        $admissions = AdmissionModel::select('enccode', 'hpercode')->get();
         
         return response()->json([
-            'data' => $admissions->items(),           // Current page data
-            'current_page' => $admissions->currentPage(),
-            'last_page' => $admissions->lastPage(),
-            'per_page' => $admissions->perPage(),
-            'total' => $admissions->total(),
+            'data' => $admissions,
         ]);
     }
 

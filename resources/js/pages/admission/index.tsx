@@ -58,14 +58,14 @@ export default function AdmissionIndex() {
     const [loading, setLoading] = useState(true);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [globalFilter, setGlobalFilter] = useState(''); 
 
-    // Fetch data from Laravel backend
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
                 const response = await axios.get('/admission/index');
-                setData(response.data.data); // DataTables returns data in data property
+                setData(response.data.data);
             } catch (error) {
                 console.error('Error fetching admission data:', error);
             } finally {
@@ -85,9 +85,11 @@ export default function AdmissionIndex() {
         getFilteredRowModel: getFilteredRowModel(),
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
+        onGlobalFilterChange: setGlobalFilter,
         state: {
             sorting,
             columnFilters,
+            globalFilter,
         },
     });
 
@@ -97,11 +99,9 @@ export default function AdmissionIndex() {
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="mb-4">
                     <Input
-                        placeholder="Filter by encounter code..."
-                        value={(table.getColumn('enccode')?.getFilterValue() as string) ?? ''}
-                        onChange={(event) =>
-                            table.getColumn('enccode')?.setFilterValue(event.target.value)
-                        }
+                        placeholder="Search admissions..."
+                        value={globalFilter ?? ''}
+                        onChange={(event) => setGlobalFilter(event.target.value)}
                         className="max-w-sm"
                     />
                 </div>
