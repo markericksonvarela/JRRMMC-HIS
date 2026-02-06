@@ -63,6 +63,7 @@ export default function Profile({
                                         required
                                         autoComplete="name"
                                         placeholder="Full name"
+                                        disabled
                                     />
 
                                     <InputError
@@ -83,6 +84,7 @@ export default function Profile({
                                         required
                                         autoComplete="username"
                                         placeholder="Email address"
+                                        disabled
                                     />
 
                                     <InputError
@@ -91,7 +93,7 @@ export default function Profile({
                                     />
                                 </div>
 
-                                {mustVerifyEmail &&
+                                {/* {mustVerifyEmail &&
                                     auth.user.email_verified_at === null && (
                                         <div>
                                             <p className="-mt-4 text-sm text-muted-foreground">
@@ -116,9 +118,9 @@ export default function Profile({
                                                 </div>
                                             )}
                                         </div>
-                                    )}
+                                    )} */}
 
-                                <div className="flex items-center gap-4">
+                                {/* <div className="flex items-center gap-4">
                                     <Button
                                         disabled={processing}
                                         data-test="update-profile-button"
@@ -137,13 +139,13 @@ export default function Profile({
                                             Saved
                                         </p>
                                     </Transition>
-                                </div>
+                                </div> */}
                             </>
                         )}
                     </Form>
                 </div>
-
-                <DeleteUser />
+{/* 
+                <DeleteUser /> */}
             </SettingsLayout>
         </AppLayout>
     );

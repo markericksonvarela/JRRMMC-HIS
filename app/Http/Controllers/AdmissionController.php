@@ -11,7 +11,7 @@ class AdmissionController extends Controller
 
     public function index(Request $request)
 {
-    $perPage = $request->get('per_page', 100);
+    $perPage = $request->get('per_page', 25);
     $page = $request->get('page', 1);
     $search = $request->get('search', '');
 
