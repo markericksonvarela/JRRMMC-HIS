@@ -27,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Registries
     Route::inertia('trauma', 'trauma')->name('trauma');
     Route::inertia('cancer', 'registries/Cancer/cancerRegistry')->name('cancer');
+    Route::inertia('cancer/cancer-form', 'registries/Cancer/cancerForm')->name('cancer.form1');
     Route::inertia('geria', 'registries/Geria/geriaRegistry')->name('geria');
     Route::inertia('skin', 'registries/Skin/skinRegistry')->name('skin');
     
