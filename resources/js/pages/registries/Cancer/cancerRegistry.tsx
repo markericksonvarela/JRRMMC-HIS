@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { cancer } from '@/routes';
@@ -8,6 +8,8 @@ import { DataTable } from '@/components/datatable';
 import { patientColumns } from './partials/columns';
 import { TableSkeleton } from '@/components/skeleton-table';
 import { Card } from '@/components/ui/card';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -116,6 +118,16 @@ export default function CancerRegistry() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cancer Registry" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-4">
+                <div className="flex items-center justify-between">
+                    <Button
+                        onClick={() => router.get('/cancer-form')}
+                        className="flex items-center gap-2"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add Patient
+                    </Button>
+                </div>
+
                 {isLoading ? (
                     <Card className="border border-sidebar-border/70">
                         <TableSkeleton rows={5} columns={7} />
