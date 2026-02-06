@@ -6,8 +6,8 @@ import { ArrowUpDown } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { admission } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
-import axios from 'axios';
 import { DataTable } from '@/components/datatable';
+import { admissionHelper, AdmissionLog } from '@/helper/admissionHelper';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,11 +15,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: admission().url,
     },
 ];
-
-type AdmissionLog = {
-    enccode: string;
-    hpercode: string;
-};
 
 const columns: ColumnDef<AdmissionLog>[] = [
     {
@@ -67,19 +62,17 @@ export default function AdmissionIndex() {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get('/admission/index', {
-                    params: {
-                        page: currentPage,
-                        per_page: perPage,
-                        search: globalFilter,
-                    }
+                const response = await admissionHelper.getDatatable({
+                    page: currentPage,
+                    per_page: perPage,
+                    search: globalFilter,
                 });
                 
-                setData(response.data.data);
-                setCurrentPage(response.data.current_page);
-                setLastPage(response.data.last_page);
-                setTotal(response.data.total);
-                setPerPage(response.data.per_page);
+                setData(response.data);
+                setCurrentPage(response.current_page);
+                setLastPage(response.last_page);
+                setTotal(response.total);
+                setPerPage(response.per_page);
             } catch (error) {
                 console.error('Error fetching admission data:', error);
             } finally {

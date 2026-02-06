@@ -23,10 +23,10 @@ export default function Dashboard() {
                         <Card className="h-40 cursor-pointer bg-green-500 hover:bg-green-600 text-white transition-all hover:scale-[1.03] hover:shadow-xl">
                             <CardHeader className="flex h-full items-center justify-center">
                                 <CardTitle>
-                                    <h1 className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
+                                    <div className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
                                         <HousePlus className="h-10 w-10" />
                                         ADMISSION
-                                    </h1>
+                                    </div>
                                 </CardTitle>
                             </CardHeader>
                         </Card>
@@ -37,10 +37,10 @@ export default function Dashboard() {
                         <Card className="h-40 cursor-pointer bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-[1.03] hover:shadow-xl">
                             <CardHeader className="flex h-full items-center justify-center">
                                 <CardTitle>
-                                    <h1 className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
+                                    <div className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
                                         <Ambulance className="h-10 w-10" />
                                         EMERGENCY
-                                    </h1>
+                                    </div>
                                 </CardTitle>
                             </CardHeader>
                         </Card>
@@ -50,10 +50,10 @@ export default function Dashboard() {
                         <Card className="h-40 cursor-pointer bg-blue-500 hover:bg-blue-600 text-white transition-all hover:scale-[1.03] hover:shadow-xl">
                             <CardHeader className="flex h-full items-center justify-center">
                                 <CardTitle>
-                                    <h1 className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
+                                    <div className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
                                         <ShieldPlus className="h-10 w-10" />
                                         OUTPATIENT
-                                    </h1>
+                                    </div>
                                 </CardTitle>
                             </CardHeader>
                         </Card>
