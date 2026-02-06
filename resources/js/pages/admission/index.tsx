@@ -61,7 +61,7 @@ export default function AdmissionIndex() {
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
-    const [perPage, setPerPage] = useState(100);
+    const [perPage, setPerPage] = useState(25);
 
     useEffect(() => {
         const fetchData = async () => {
