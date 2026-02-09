@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,9 @@ import { admission } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/datatable';
 import { admissionHelper, AdmissionLog } from '@/helper/admissionHelper';
+import { TableSkeleton } from '@/components/skeleton-table';
+import { Card } from '@/components/ui/card';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -16,17 +19,23 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Action handlers
+interface Ward {
+    wardcode: string;
+    wardname: string;
+}
+
+interface Props{
+    ward?: string;
+    wardname?: string;
+}
+
+// Action handlers remain the same...
 const handleView = (enccode: string) => {
     console.log('View:', enccode);
-    // TODO: Navigate to view page or open modal
-    // window.location.href = `/admission/${enccode}`;
 };
 
 const handleEdit = (enccode: string) => {
     console.log('Edit:', enccode);
-    // TODO: Navigate to edit page or open modal
-    // window.location.href = `/admission/${enccode}/edit`;
 };
 
 const handleDelete = async (enccode: string, refreshData: () => void) => {
@@ -34,7 +43,6 @@ const handleDelete = async (enccode: string, refreshData: () => void) => {
         try {
             await admissionHelper.delete(enccode);
             console.log('Deleted:', enccode);
-            // Refresh the table after successful deletion
             refreshData();
         } catch (error) {
             console.error('Error deleting admission:', error);
@@ -43,16 +51,30 @@ const handleDelete = async (enccode: string, refreshData: () => void) => {
     }
 };
 
-export default function AdmissionIndex() {
+export default function AdmissionIndex({ ward, wardname }: Props) {
     const [data, setData] = useState<AdmissionLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [globalFilter, setGlobalFilter] = useState('');
+    const [wards, setWards] = useState<Ward[]>([]);
     
     // Server-side pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [perPage, setPerPage] = useState(15);
+
+    // Fetch wards on mount
+    useEffect(() => {
+        const fetchWards = async () => {
+            try {
+                const response = await axios.get('/api/wards');
+                setWards(response.data.data);
+            } catch (error) {
+                console.error('Error fetching wards:', error);
+            }
+        };
+        fetchWards();
+    }, []);
 
     const fetchData = async () => {
         try {
@@ -61,6 +83,7 @@ export default function AdmissionIndex() {
                 page: currentPage,
                 per_page: perPage,
                 search: globalFilter,
+                ward: ward,
             });
             
             setData(response.data);
@@ -78,14 +101,14 @@ export default function AdmissionIndex() {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             fetchData();
-        }, 300); // Debounce for 300ms
+        }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [currentPage, perPage, globalFilter]);
+    }, [currentPage, perPage, globalFilter, ward]);
 
     const handleSearchChange = (search: string) => {
         setGlobalFilter(search);
-        setCurrentPage(1); // Reset to first page on search
+        setCurrentPage(1);
     };
 
     const handlePageChange = (page: number) => {
@@ -94,10 +117,26 @@ export default function AdmissionIndex() {
 
     const handlePerPageChange = (newPerPage: number) => {
         setPerPage(newPerPage);
-        setCurrentPage(1); // Reset to first page when changing items per page
+        setCurrentPage(1);
     };
 
-    // Define columns inside component so we can access fetchData
+    const handleWardChange = (wardCode: string, wardName: string) => {
+        router.get(admission().url, {
+            ward: wardCode,
+            wardname: wardName
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleClearWard = () => {
+        router.get(admission().url, {}, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
     const columns: ColumnDef<AdmissionLog>[] = [
         {
             accessorKey: 'admdate',
@@ -164,7 +203,6 @@ export default function AdmissionIndex() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            // onClick={() => handleSOAP(admission.enccode)}
                             title="SOAP"
                         >
                             <BookHeart className="h-4 w-4 text-green-500" />
@@ -172,7 +210,6 @@ export default function AdmissionIndex() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            // onClick={() => handleDoctorsOrder(admission.enccode)}
                             title="DOCTORS ORDER"
                         >
                             <ClipboardPlus className="h-4 w-4 text-blue-500" />
@@ -207,26 +244,37 @@ export default function AdmissionIndex() {
         },
     ];
 
-return (
-    <AppLayout breadcrumbs={breadcrumbs}>
-        <Head title="Admission Log" />
-        <div className="flex h-full w-full flex-1 flex-col gap-2 rounded-xl p-2 text-2xl">
-            <DataTable
-                columns={columns}
-                data={data}
-                filterColumn="hpercode"
-                filterPlaceholder="Search admissions..."
-                manualPagination={true}
-                pageCount={lastPage}
-                currentPage={currentPage}
-                onPageChange={handlePageChange}
-                perPage={perPage}
-                onPerPageChange={handlePerPageChange}
-                total={total}
-                loading={loading}
-                onSearchChange={handleSearchChange}
-            />
-        </div>
-    </AppLayout>
-);
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Admission Department" />
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-4">
+                {loading ? (
+                    <Card className="border border-sidebar-border/70">
+                        <TableSkeleton rows={10} columns={9} />
+                    </Card>
+                ) : (
+                    <DataTable
+                        columns={columns}
+                        data={data}
+                        filterColumn="enccode"
+                        filterPlaceholder="Search Patient"
+                        manualPagination={true}
+                        pageCount={lastPage}
+                        currentPage={currentPage}
+                        onPageChange={handlePageChange}
+                        perPage={perPage}
+                        onPerPageChange={handlePerPageChange}
+                        total={total}
+                        loading={loading}
+                        onSearchChange={handleSearchChange}
+                        wards={wards}
+                        selectedWard={ward}
+                        selectedWardName={wardname}
+                        onWardChange={handleWardChange}
+                        onClearWard={handleClearWard}
+                    />
+                )}
+            </div>
+        </AppLayout>
+    );
 }

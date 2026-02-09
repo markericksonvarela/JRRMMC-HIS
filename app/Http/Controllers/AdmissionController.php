@@ -11,8 +11,13 @@ class AdmissionController extends Controller
     {
         $perPage = $request->get('per_page', 100);
         $page = $request->get('page', 1);
+        $ward = $request->get('ward', '');
 
         $query = AdmissionModel::getPatientsList();
+
+        if ($ward) {
+            $query->where('hward.wardcode', $ward);
+        }
 
         $patient = $query->paginate($perPage, ['*'], 'page', $page);
 
