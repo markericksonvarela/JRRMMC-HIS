@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Admission
     Route::inertia('admission', 'admission/index')->name('admission');
-    Route::get('admission/index', [AdmissionController::class, 'index'])->name('admission.index');
+    Route::get('api/admission/datatable', [AdmissionController::class, 'index'])->name('admission.index');
     Route::post('admissions', [AdmissionController::class, 'store'])->name('admissions.store');
     Route::get('admissions/{enccode}', [AdmissionController::class, 'show'])->name('admissions.show');
     Route::put('admissions/{enccode}', [AdmissionController::class, 'update'])->name('admissions.update');
