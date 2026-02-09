@@ -1,8 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+// import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard, admission, emergency, outpatient } from '@/routes';
+import { patrecord, admission, emergency, outpatient } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { HousePlus, Ambulance, ShieldPlus } from "lucide-react";
@@ -10,14 +10,14 @@ import { WardFilter } from '@/components/wardfilter';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
-        href: dashboard().url,
+        title: 'Patient Records',
+        href: patrecord().url,
     },
 ];
 
 type Department = 'admission' | 'emergency' | 'outpatient';
 
-export default function Dashboard() {
+export default function PatientRecord() {
     const [showWardModal, setShowWardModal] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState<Department>('admission');
 
@@ -45,7 +45,7 @@ export default function Dashboard() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title="PatientRecord" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     <div onClick={() => handleDepartmentClick('admission')}>

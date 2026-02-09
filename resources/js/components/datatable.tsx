@@ -6,7 +6,14 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { se } from 'date-fns/locale';
+
+interface Ward {
+    wardcode: string;
+    wardname: string;
+}
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -29,6 +36,12 @@ interface DataTableProps<TData, TValue> {
     total?: number;
     loading?: boolean;
     onSearchChange?: (search: string) => void;
+    // Ward filter props
+    wards?: Ward[];
+    selectedWard?: string;
+    selectedWardName?: string;
+    onWardChange?: (wardCode: string, wardName: string) => void;
+    onClearWard?: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -46,6 +59,11 @@ export function DataTable<TData, TValue>({
     total = 0,
     loading = false,
     onSearchChange,
+    wards,
+    selectedWard,
+    selectedWardName,
+    onWardChange,
+    onClearWard,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -57,7 +75,6 @@ export function DataTable<TData, TValue>({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: manualPagination ? undefined : () => ({ rows: data, rowsById: {} }),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: manualPagination ? undefined : getFilteredRowModel(),
         onSortingChange: setSorting,
@@ -96,23 +113,89 @@ export function DataTable<TData, TValue>({
 
     const TableContent = () => (
         <>
-            {/* search patient and column */}
-            <div className="flex items-center justify-between p-4 border-b">
-                {filterColumn && (
-                    <Input
-                        placeholder={filterPlaceholder}
-                        value={(table.getColumn(filterColumn)?.getFilterValue() as string) ?? ''}
-                        onChange={(event) => {
-                            const value = event.target.value;
-                            table.getColumn(filterColumn)?.setFilterValue(value);
-                            // Call server-side search if enabled
-                            if (manualPagination && onSearchChange) {
-                                onSearchChange(value);
-                            }
-                        }}
-                        className="max-w-sm"
-                    />
-                )}
+            {/* search patient, ward filter, and column visibility */}
+            <div className="flex items-center justify-between gap-4 p-4 border-b">
+                <div className="flex items-center gap-2 flex-1">
+                    {filterColumn && (
+                        <Input
+                            placeholder={filterPlaceholder}
+                            value={(table.getColumn(filterColumn)?.getFilterValue() as string) ?? ''}
+                            onChange={(event) => {
+                                const value = event.target.value;
+                                table.getColumn(filterColumn)?.setFilterValue(value);
+                                if (manualPagination && onSearchChange) {
+                                    onSearchChange(value);
+                                }
+                            }}
+                            className="max-w-sm"
+                        />
+                    )}
+                    
+                    {wards && wards.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <Select
+                                value={selectedWard}
+                                onValueChange={(value) => {
+                                    const ward = wards.find(w => w.wardcode === value);
+                                    if (ward && onWardChange) {
+                                        onWardChange(ward.wardcode, ward.wardname);
+                                    }
+                                }}
+                            >
+                                <SelectTrigger className="w-[250px]" showClear={!!selectedWard} onClear={selectedWard ? onClearWard : undefined}>
+                                    <SelectValue placeholder="Select Ward">
+                                        {selectedWardName || "All Wards"}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {wards.map((ward) => (
+                                        <SelectItem key={ward.wardcode} value={ward.wardcode}>
+                                            {ward.wardname}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            
+                            {/* {selectedWard && onClearWard && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={onClearWard}
+                                    className="h-9 px-2"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            )} */}
+                        </div>
+                    )}
+                </div>
+                
+                {/* <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="ml-auto">
+                            Columns <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {table
+                            .getAllColumns()
+                            .filter((column) => column.getCanHide())
+                            .map((column) => {
+                                return (
+                                    <DropdownMenuCheckboxItem
+                                        key={column.id}
+                                        className="capitalize"
+                                        checked={column.getIsVisible()}
+                                        onCheckedChange={(value) =>
+                                            column.toggleVisibility(!!value)
+                                        }
+                                    >
+                                        {column.id}
+                                    </DropdownMenuCheckboxItem>
+                                );
+                            })}
+                    </DropdownMenuContent>
+                </DropdownMenu> */}
             </div>
 
             {/* main table */}

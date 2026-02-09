@@ -3,7 +3,7 @@ import axios from 'axios';
 export interface AdmissionLog {
     enccode: string;
     hpercode: string;
-    admdate: string; // Added admdate field
+    admdate: string;
     patfirst: string;
     patmiddle: string;
     patlast: string;
@@ -25,6 +25,7 @@ export const admissionHelper = {
         page?: number;
         per_page?: number;
         search?: string;
+        ward?: string;
     }): Promise<PaginatedResponse<AdmissionLog>> => {
         const response = await axios.get('api/admission/datatable', { params });
         return response.data;

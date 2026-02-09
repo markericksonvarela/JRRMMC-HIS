@@ -24,13 +24,23 @@ class AdmissionModel extends Model
     private static function datatable(array $filters = [])
     {
         $query = DB::table('hadmlog')
-            ->join('hperson', 'hadmlog.hpercode', '=', 'hperson.hpercode')
-            ->join('htypser', 'htypser.tscode', '=', 'hadmlog.tscode')
-            ->join('henctr', 'henctr.enccode', '=', 'hadmlog.enccode')
+            ->join('hperson', 'hadmlog.hpercode', '=', 'hperson.hpercode', 'inner')
+            ->leftJoin('htypser', 'htypser.tscode', '=', 'hadmlog.tscode')
+            ->leftJoin('henctr', 'henctr.enccode', '=', 'hadmlog.enccode')
+            ->leftJoin('hpatroom', 'hpatroom.enccode', '=', 'hadmlog.enccode')
+            ->leftJoin('hbed', 'hpatroom.bdintkey', '=', 'hbed.bdintkey')
+            ->leftJoin('hward', 'hbed.wardcode', '=', 'hward.wardcode')
+            ->leftJoin('hroom', 'hbed.rmintkey', '=', 'hroom.rmintkey')
             ->where('hadmlog.admstat', 'A')
             ->select(
                 'hadmlog.enccode',
                 'hadmlog.hpercode',
+                'hperson.patsex',
+                'htypser.tsdesc',
+                'hward.wardname',
+                'hward.wardcode',
+                'hroom.rmname',
+                'hbed.bdname',
                 DB::raw("(
                     RTRIM(LTRIM(hperson.patlast)) + ', ' +
                     RTRIM(LTRIM(hperson.patfirst)) +
@@ -46,10 +56,8 @@ class AdmissionModel extends Model
                     END
                 ) AS patient_name"),
                 DB::raw("CONVERT(INTEGER, hadmlog.patage, 0) AS age"),
-                'hperson.patsex',
-                'htypser.tsdesc',
                 DB::raw("CONVERT(VARCHAR(10), hadmlog.admdate, 101) AS admdate"),
-                DB::raw("ISNULL(FORMAT(CAST(hadmlog.admtime AS TIME), N'hh:mm tt'), 'N/A') AS admtime"),
+                DB::raw("ISNULL(FORMAT(CAST(hadmlog.admtime AS TIME), N'hh:mm tt'), 'N/A') AS admtime")
             );
 
         return $query;

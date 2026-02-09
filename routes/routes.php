@@ -1,11 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdmissionController;
 use App\Http\Controllers\OutpatientController;
+use App\Http\Controllers\WardController;
 
 // PUBLIC ROUTES
 Route::inertia('/', 'auth/login', [
@@ -20,7 +22,7 @@ Route::middleware('auth')->group(function () {
     
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::inertia('registries', 'registries')->name('registries');
-    Route::inertia('patrecord', 'patrecord')->name('patrecord');
+    Route::inertia('patrecord', 'patientRecords/patientRec')->name('patrecord');
 });
 
 // AUTH + VERIFIED ROUTES
@@ -34,25 +36,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Admission
     Route::inertia('admission', 'admission/index')->name('admission');
+    Route::get('admission', function (Request $request) { return Inertia::render('admission/index', [
+            'ward' => $request->get('ward'),
+            'wardname' => $request->get('wardname'),
+        ]);
+    })->name('admission');
     Route::get('api/admission/datatable', [AdmissionController::class, 'index'])->name('admission.index');
-    Route::post('admissions', [AdmissionController::class, 'store'])->name('admissions.store');
-    Route::get('admissions/{enccode}', [AdmissionController::class, 'show'])->name('admissions.show');
-    Route::put('admissions/{enccode}', [AdmissionController::class, 'update'])->name('admissions.update');
-    Route::delete('admissions/{enccode}', [AdmissionController::class, 'destroy'])->name('admissions.destroy');
+    Route::post('api/admissions', [AdmissionController::class, 'store'])->name('admissions.store');
+    Route::get('api/admissions/{enccode}', [AdmissionController::class, 'show'])->name('admissions.show');
+    Route::put('api/admissions/{enccode}', [AdmissionController::class, 'update'])->name('admissions.update');
+    Route::delete('api/admissions/{enccode}', [AdmissionController::class, 'destroy'])->name('admissions.destroy');
     
     // Emergency
     Route::inertia('emergency', 'emergency/emergencyDatatable')->name('emergency');
     
     // Outpatient
     Route::inertia('outpatient', 'outpatient/outpatientDatatable')->name('outpatient');
-    Route::get('outpatient/outpatientDatatable', [OutpatientController::class, 'index'])->name('outpatient.index');
-    Route::get('outpatient/stats', [OutpatientController::class, 'stats'])->name('outpatient.stats');
-    Route::get('outpatient/create', [OutpatientController::class, 'create'])->name('outpatient.create');
-    Route::post('outpatient', [OutpatientController::class, 'store'])->name('outpatient.store');
-    Route::get('outpatient/{hpercode}', [OutpatientController::class, 'show'])->name('outpatient.show');
-    Route::get('outpatient/{hpercode}/edit', [OutpatientController::class, 'edit'])->name('outpatient.edit');
-    Route::put('outpatient/{hpercode}', [OutpatientController::class, 'update'])->name('outpatient.update');
-    Route::delete('outpatient/{hpercode}', [OutpatientController::class, 'destroy'])->name('outpatient.destroy');
+    Route::get('api/outpatient/outpatientDatatable', [OutpatientController::class, 'index'])->name('outpatient.index');
+    Route::get('api/outpatient/stats', [OutpatientController::class, 'stats'])->name('outpatient.stats');
+    Route::get('api/outpatient/create', [OutpatientController::class, 'create'])->name('outpatient.create');
+    Route::post('api/outpatient', [OutpatientController::class, 'store'])->name('outpatient.store');
+    Route::get('api/outpatient/{hpercode}', [OutpatientController::class, 'show'])->name('outpatient.show');
+
+    // Ward
+    Route::get('api/wards', [WardController::class, 'index'])->name('wards.index');
 });
 
 require __DIR__.'/settings.php';
