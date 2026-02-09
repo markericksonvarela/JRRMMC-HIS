@@ -1,108 +1,70 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class AdmissionModel extends Model
 {
     use HasFactory;
 
-    // Table name
     protected $table = 'hadmlog';
-    
-    // Primary key
     protected $primaryKey = 'enccode';
-    
-    // Primary key type
-    protected $keyType = 'string';
-    
-    // Primary key is not auto-incrementing
     public $incrementing = false;
-    
-    // Disable timestamps
+    protected $keyType = 'string';
     public $timestamps = false;
 
-    // Mass assignable attributes
     protected $fillable = [
         'enccode',
         'hpercode',
-        'admdate'
-        // add other columns here
+        'admdate',
     ];
 
-    // Attributes that should be hidden for arrays/JSON
-    protected $hidden = [
-        // add sensitive fields here (e.g., 'password', 'token')
-    ];
-
-    // Attributes that should be cast to native types
-    protected $casts = [
-        // example: 'admdate' => 'datetime',
-        // example: 'is_active' => 'boolean',
-    ];
-
-    /**
-     * Relationship to HpersonModel
-     */
-    public function patient()
+    private static function datatable(array $filters = [])
     {
-        return $this->belongsTo(HpersonModel::class, 'hpercode', 'hpercode');
-    }
-
-    /**
-     * Scope to join with patient data
-     * 
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeWithPatientData($query)
-    {
-        return $query->leftJoin('hperson', 'hadmlog.hpercode', '=', 'hperson.hpercode')
+        $query = DB::table('hadmlog')
+            ->join('hperson', 'hadmlog.hpercode', '=', 'hperson.hpercode')
+            ->join('htypser', 'htypser.tscode', '=', 'hadmlog.tscode')
+            ->join('henctr', 'henctr.enccode', '=', 'hadmlog.enccode')
+            ->where('hadmlog.admstat', 'A')
             ->select(
                 'hadmlog.enccode',
                 'hadmlog.hpercode',
-                'hadmlog.admdate',
-                'hperson.patfirst',
-                'hperson.patmiddle',
-                'hperson.patlast'
+                DB::raw("(
+                    RTRIM(LTRIM(hperson.patlast)) + ', ' +
+                    RTRIM(LTRIM(hperson.patfirst)) +
+                    CASE 
+                        WHEN hperson.patsuffix IS NULL OR hperson.patsuffix = 'NOTAP' OR RTRIM(LTRIM(hperson.patsuffix)) = ''
+                        THEN ''
+                        ELSE ' ' + RTRIM(LTRIM(hperson.patsuffix))
+                    END +
+                    CASE 
+                        WHEN hperson.patmiddle IS NULL OR RTRIM(LTRIM(hperson.patmiddle)) = ''
+                        THEN ''
+                        ELSE ', ' + RTRIM(LTRIM(hperson.patmiddle))
+                    END
+                ) AS patient_name"),
+                DB::raw("CONVERT(INTEGER, hadmlog.patage, 0) AS age"),
+                'hperson.patsex',
+                'htypser.tsdesc',
+                DB::raw("CONVERT(VARCHAR(10), hadmlog.admdate, 101) AS admdate"),
+                DB::raw("ISNULL(FORMAT(CAST(hadmlog.admtime AS TIME), N'hh:mm tt'), 'N/A') AS admtime"),
             );
+
+        return $query;
     }
 
-    /**
-     * Scope to filter by latest year
-     * 
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeLatestYear($query)
-    {
-        $latestYear = self::selectRaw('YEAR(MAX(admdate)) as latest_year')
-            ->value('latest_year');
-        
-        return $query->whereYear('hadmlog.admdate', $latestYear);
+
+    public static function getPatientsList(array $filters = [])
+    {  
+        return self::datatable($filters);
     }
 
-    /**
-     * Scope to search across admission and patient fields
-     * 
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $search
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeSearch($query, $search)
+    public static function getPatientByEnccode(string $enccode): ?object
     {
-        if (empty($search)) {
-            return $query;
-        }
-
-        return $query->where(function($q) use ($search) {
-            $q->where('hadmlog.enccode', 'like', "%{$search}%")
-              ->orWhere('hadmlog.hpercode', 'like', "%{$search}%")
-              ->orWhere('hperson.patfirst', 'like', "%{$search}%")
-              ->orWhere('hperson.patmiddle', 'like', "%{$search}%")
-              ->orWhere('hperson.patlast', 'like', "%{$search}%");
-        });
+        return self::datatable()
+            ->where('hadmlog.enccode', $enccode)
+            ->first();
     }
 }

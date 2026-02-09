@@ -187,3 +187,16 @@
     }
 }
 
+tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: rgb(234 179 8); /* yellow-500 */
+    cursor: pointer;
+}
+
+/* Optional: Make text darker on hover for better contrast */
+tbody tr:hover td {
+    color: rgb(0 0 0); /* black text */
+}
