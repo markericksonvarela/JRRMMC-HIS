@@ -22,14 +22,6 @@ export default function AuthSimpleLayout({
 
             <div className="absolute inset-0 bg-black/50" />
 
-            <div className="absolute left-6 top-6 z-20">
-                <img
-                    src="/images/jrrmc_logo.svg"
-                    alt="JRRMC Logo"
-                    className="h-32 w-auto drop-shadow-2xl select-none"
-                />
-            </div>
-
             <div className="relative z-20 w-full max-w-md px-6">
                 {children}
             </div>
