@@ -1,135 +1,118 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AdmissionModel;
-use App\Models\HpersonModel;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AdmissionController extends Controller
 {
-    /**
-     * GET /admissions - GET ALL
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', 100);
         $page = $request->get('page', 1);
-        $search = $request->get('search', '');
 
-        // Use the query scopes from the model
-        $admissions = AdmissionModel::withPatientData()
-            ->latestYear()
-            ->search($search)
-            ->paginate($perPage, ['*'], 'page', $page);
+        $query = AdmissionModel::getPatientsList();
+
+        $patient = $query->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
-            'data' => $admissions->items(),
-            'current_page' => $admissions->currentPage(),
-            'last_page' => $admissions->lastPage(),
-            'per_page' => $admissions->perPage(),
-            'total' => $admissions->total(),
-            'from' => $admissions->firstItem(),
-            'to' => $admissions->lastItem(),
+            'data' => $patient->items(),
+            'current_page' => $patient->currentPage(),
+            'last_page' => $patient->lastPage(),
+            'per_page' => $patient->perPage(),
+            'total' => $patient->total(),
+            'from' => $patient->firstItem(),
+            'to' => $patient->lastItem(),
         ]);
     }
 
-    /**
-     * GET /admissions/create - Show form to create new admission
-     * 
-     * @return \Illuminate\View\View
-     */
-    public function create()
+    public function show(string $enccode)
     {
-        return view('admissions.create');
+        try {
+            $patient = AdmissionModel::getPatientByEnccode($enccode);
+
+            if (!$patient) {
+                return redirect()->route('admission')
+                    ->with('error', 'Patient not found.');
+            }
+
+            return Inertia::render('admission/Show', [
+                'patient' => AdmissionModel::getPatientInformation($patient),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('admission show error: ' . $e->getMessage());
+            
+            return redirect()->route('admission')
+                ->with('error', 'Failed to load patient details.');
+        }
     }
 
-    /**
-     * POST /admissions - Store new admission
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'enccode' => 'required|string|unique:hadmlog,enccode',
-            'hpercode' => 'required|string|exists:hperson,hpercode',
-            'admdate' => 'required|date',
-            // add other validation rules here
-        ]);
+    // public function store(Request $request)
+    // {
+    //     try {
+    //         $validated = $request->validate([
+    //             'enccode' => 'required|string|unique:hadmlog,enccode',
+    //             'hpercode' => 'required|string',
+    //             'patsex' => 'required|string',
+    //             'patage' => 'required|integer',
+    //             'tscode' => 'required|string',
+    //             'opddate' => 'required|date',
+    //             'opdtime' => 'required',
+    //         ]);
 
-        $admission = AdmissionModel::create($validated);
-        
-        return redirect()->route('admissions.show', $admission->enccode)
-            ->with('success', 'Admission created successfully.');
-    }
+    //         AdmissionModel::create($validated);
 
-    /**
-     * GET /admissions/{enccode} - Show single admission
-     * 
-     * @param string $enccode
-     * @return \Illuminate\View\View
-     */
-    public function show($enccode)
-    {
-        $admission = AdmissionModel::where('enccode', $enccode)->firstOrFail();
-        
-        return view('admissions.show', compact('admission'));
-    }
+    //         return redirect()->route('admission')
+    //             ->with('success', 'Patient registered successfully.');
+    //     } catch (\Exception $e) {
+    //         \Log::error('admission store error: ' . $e->getMessage());
+            
+    //         return back()
+    //             ->withInput()
+    //             ->withErrors(['error' => 'Failed to register patient.']);
+    //     }
+    // }
 
-    /**
-     * GET /admissions/{enccode}/edit - Show form to edit
-     * 
-     * @param string $enccode
-     * @return \Illuminate\View\View
-     */
-    public function edit($enccode)
-    {
-        $admission = AdmissionModel::where('enccode', $enccode)->firstOrFail();
-        
-        return view('admissions.edit', compact('admission'));
-    }
+    // public function update(Request $request, string $enccode)
+    // {
+    //     try {
+    //         $patient = AdmissionModel::where('enccode', $enccode)->firstOrFail();
 
-    /**
-     * PUT/PATCH /admissions/{enccode} - Update admission
-     * 
-     * @param Request $request
-     * @param string $enccode
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, $enccode)
-    {
-        $admission = AdmissionModel::where('enccode', $enccode)->firstOrFail();
-        
-        $validated = $request->validate([
-            'hpercode' => 'sometimes|required|string|exists:hperson,hpercode',
-            'admdate' => 'sometimes|required|date',
-            // add other validation rules here
-        ]);
-        
-        $admission->update($validated);
-        
-        return redirect()->route('admissions.show', $admission->enccode)
-            ->with('success', 'Admission updated successfully.');
-    }
+    //         $validated = $request->validate([
+    //             'tscode' => 'required|string',
+    //             'opddate' => 'required|date',
+    //             'opdtime' => 'required',
+    //             'opdstat' => 'sometimes|string',
+    //         ]);
 
-    /**
-     * DELETE /admissions/{enccode} - Delete admission
-     * 
-     * @param string $enccode
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy($enccode)
-    {
-        $admission = AdmissionModel::where('enccode', $enccode)->firstOrFail();
-        $admission->delete();
-        
-        return redirect()->route('admissions.index')
-            ->with('success', 'Admission deleted successfully.');
-    }
+    //         $patient->update($validated);
+
+    //         return redirect()->route('admission')
+    //             ->with('success', 'Patient updated successfully.');
+    //     } catch (\Exception $e) {
+    //         \Log::error('admission update error: ' . $e->getMessage());
+            
+    //         return back()
+    //             ->withInput()
+    //             ->withErrors(['error' => 'Failed to update patient.']);
+    //     }
+    // }
+
+    // public function destroy(string $enccode)
+    // {
+    //     try {
+    //         $patient = AdmissionModel::where('enccode', $enccode)->firstOrFail();
+            
+    //         $patient->update(['opdstat' => 'I']);
+
+    //         return redirect()->route('admission')
+    //             ->with('success', 'Patient record deactivated successfully.');
+    //     } catch (\Exception $e) {
+    //         \Log::error('admission destroy error: ' . $e->getMessage());
+            
+    //         return back()
+    //             ->with('error', 'Failed to deactivate patient record.');
+    //     }
+    // }
 }

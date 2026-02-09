@@ -140,8 +140,7 @@ export default function AdmissionIndex() {
             },
         },
         {
-            id: 'patient_name',
-            accessorFn: (row) => `${row.patfirst || ''} ${row.patmiddle || ''} ${row.patlast || ''}`.trim(),
+            accessorKey: 'patient_name',
             header: ({ column }) => {
                 return (
                     <Button
@@ -208,26 +207,26 @@ export default function AdmissionIndex() {
         },
     ];
 
-    return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Admission Log" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <DataTable
-                    columns={columns}
-                    data={data}
-                    filterColumn="hpercode"
-                    filterPlaceholder="Search admissions..."
-                    manualPagination={true}
-                    pageCount={lastPage}
-                    currentPage={currentPage}
-                    onPageChange={handlePageChange}
-                    perPage={perPage}
-                    onPerPageChange={handlePerPageChange}
-                    total={total}
-                    loading={loading}
-                    onSearchChange={handleSearchChange}
-                />
-            </div>
-        </AppLayout>
-    );
+return (
+    <AppLayout breadcrumbs={breadcrumbs}>
+        <Head title="Admission Log" />
+        <div className="flex h-full w-full flex-1 flex-col gap-2 rounded-xl p-2 text-2xl">
+            <DataTable
+                columns={columns}
+                data={data}
+                filterColumn="hpercode"
+                filterPlaceholder="Search admissions..."
+                manualPagination={true}
+                pageCount={lastPage}
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+                perPage={perPage}
+                onPerPageChange={handlePerPageChange}
+                total={total}
+                loading={loading}
+                onSearchChange={handleSearchChange}
+            />
+        </div>
+    </AppLayout>
+);
 }
