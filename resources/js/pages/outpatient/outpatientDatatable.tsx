@@ -1,193 +1,133 @@
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel, getSortedRowModel, SortingState, getFilteredRowModel, ColumnFiltersState } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ArrowUpDown } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { outpatient } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, Patient, OutpatientFilters } from '@/types';
+import { DataTable } from '@/components/datatable';
+import { patientColumns } from './partials/opdColumns'
+import axios from 'axios';
+import { TableSkeleton } from '@/components/skeleton-table';
+import { Card } from '@/components/ui/card';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'OUTPATIENT LOG',
+        title: 'Outpatient Department',
         href: outpatient().url,
     },
 ];
 
-type Patient = {
-    id: string;
-    name: string;
-    age: number;
-    diagnosis: string;
-    stage: string;
-    dateRegistered: string;
-};
+interface Props {
+    patients: {
+        data: Patient[];
+    };
+    filters: OutpatientFilters;
+    error?: string;
+}
 
-//sample data
-const data: Patient[] = [
-    {
-        id: '1',
-        name: 'Juan Dela Cruz',
-        age: 45,
-        diagnosis: 'Lung Cancer',
-        stage: 'Stage II',
-        dateRegistered: '2024-01-15',
-    },
-    {
-        id: '2',
-        name: 'Maria Santos',
-        age: 52,
-        diagnosis: 'Breast Cancer',
-        stage: 'Stage III',
-        dateRegistered: '2024-02-20',
-    },
-    {
-        id: '3',
-        name: 'Pedro Reyes',
-        age: 38,
-        diagnosis: 'Colon Cancer',
-        stage: 'Stage I',
-        dateRegistered: '2024-03-10',
-    },
-];
+export default function OutpatientDepartment({ patients, filters, error }: Props) {
+    const [isLoading ] = useState(false);
+    const [data, setData] = useState<Patient[]>( [] );
+    const [loading, setLoading] = useState(true);
+    const [globalFilter, setGlobalFilter] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [perPage, setPerPage] = useState(100);
 
-const columns: ColumnDef<Patient>[] = [
-    {
-        accessorKey: 'name',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                >
-                    Patient Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-    },
-    {
-        accessorKey: 'age',
-        header: 'Age',
-    },
-    {
-        accessorKey: 'diagnosis',
-        header: 'Diagnosis',
-    },
-    {
-        accessorKey: 'stage',
-        header: 'Stage',
-    },
-    {
-        accessorKey: 'dateRegistered',
-        header: 'Date Registered',
-    },
-];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get('/outpatient/outpatientDatatable', {
+                    params: {
+                        page: currentPage,
+                        per_page: perPage,
+                        search: globalFilter,
+                    }
+                });
+                
+                setData(response.data.data);
+                setCurrentPage(response.data.current_page);
+                setLastPage(response.data.last_page);
+                setTotal(response.data.total);
+                setPerPage(response.data.per_page);
+            } catch (error) {
+                console.error('Error fetching outpatient data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-export default function CancerRegistry() {
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+        const timeoutId = setTimeout(() => {
+            fetchData();
+        }, 300);
 
-    const table = useReactTable({
-        data,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        state: {
-            sorting,
-            columnFilters,
-        },
-    });
+        return () => clearTimeout(timeoutId);
+    }, [currentPage, perPage, globalFilter]);
+
+    const handleSearchChange = (search: string) => {
+        setGlobalFilter(search);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handlePerPageChange = (newPerPage: number) => {
+        setPerPage(newPerPage);
+        setCurrentPage(1);
+    };
+
+    if (error) {
+        return (
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Outpatient Department" />
+                <div className="flex h-full items-center justify-center p-4">
+                    <Card className="p-6 max-w-md">
+                        <div className="text-center">
+                            <h3 className="text-lg font-semibold text-destructive mb-2">
+                                Error Loading Data
+                            </h3>
+                            <p className="text-muted-foreground mb-4">{error}</p>
+                            <button
+                                onClick={() => router.reload()}
+                                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    </Card>
+                </div>
+            </AppLayout>
+        );
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Cancer Registry" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="mb-4">
-                    <Input
-                        placeholder="Filter by patient name..."
-                        value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-                        onChange={(event) =>
-                            table.getColumn('name')?.setFilterValue(event.target.value)
-                        }
-                        className="max-w-sm"
+            <Head title="Outpatient Department" />
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-4">
+                {loading ? (
+                    <Card className="border border-sidebar-border/70">
+                        <TableSkeleton rows={10} columns={9} />
+                    </Card>
+                ) : (
+                    <DataTable
+                        columns={patientColumns}
+                        data={data}
+                        filterColumn="enccode"
+                        filterPlaceholder="Search admissions..."
+                        manualPagination={true}
+                        pageCount={lastPage}
+                        currentPage={currentPage}
+                        onPageChange={handlePageChange}
+                        perPage={perPage}
+                        onPerPageChange={handlePerPageChange}
+                        total={total}
+                        loading={loading}
+                        onSearchChange={handleSearchChange}
                     />
-                </div>
-                <div className="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <Table>
-                        <TableCaption>OPD LOG</TableCaption>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
-                                        return (
-                                            <TableHead key={header.id}>
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                          header.column.columnDef.header,
-                                                          header.getContext()
-                                                      )}
-                                            </TableHead>
-                                        );
-                                    })}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={row.getIsSelected() && 'selected'}
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={columns.length}
-                                        className="h-24 text-center"
-                                    >
-                                        No results.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-                <div className="flex items-center justify-end space-x-2 py-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
+                )}
             </div>
         </AppLayout>
     );

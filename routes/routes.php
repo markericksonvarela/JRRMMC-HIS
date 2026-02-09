@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdmissionController;
+use App\Http\Controllers\OutpatientController;
 
 // PUBLIC ROUTES
 Route::inertia('/', 'auth/login', [
@@ -43,6 +44,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Outpatient
     Route::inertia('outpatient', 'outpatient/outpatientDatatable')->name('outpatient');
+    Route::get('outpatient/outpatientDatatable', [OutpatientController::class, 'index'])->name('outpatient.index');
+    Route::get('outpatient/stats', [OutpatientController::class, 'stats'])->name('outpatient.stats');
+    Route::get('outpatient/create', [OutpatientController::class, 'create'])->name('outpatient.create');
+    Route::post('outpatient', [OutpatientController::class, 'store'])->name('outpatient.store');
+    Route::get('outpatient/{hpercode}', [OutpatientController::class, 'show'])->name('outpatient.show');
+    Route::get('outpatient/{hpercode}/edit', [OutpatientController::class, 'edit'])->name('outpatient.edit');
+    Route::put('outpatient/{hpercode}', [OutpatientController::class, 'update'])->name('outpatient.update');
+    Route::delete('outpatient/{hpercode}', [OutpatientController::class, 'destroy'])->name('outpatient.destroy');
 });
 
 require __DIR__.'/settings.php';
