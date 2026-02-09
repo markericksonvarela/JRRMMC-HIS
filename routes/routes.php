@@ -28,12 +28,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Registries
     Route::inertia('trauma', 'trauma')->name('trauma');
     Route::inertia('cancer', 'registries/Cancer/cancerRegistry')->name('cancer');
+    Route::inertia('cancer/cancer-form', 'registries/Cancer/cancerForm')->name('cancer.form1');
     Route::inertia('geria', 'registries/Geria/geriaRegistry')->name('geria');
     Route::inertia('skin', 'registries/Skin/skinRegistry')->name('skin');
     
     // Admission
     Route::inertia('admission', 'admission/index')->name('admission');
-    Route::get('admission/index', [AdmissionController::class, 'index'])->name('admission.index');
+    Route::get('api/admission/datatable', [AdmissionController::class, 'index'])->name('admission.index');
     Route::post('admissions', [AdmissionController::class, 'store'])->name('admissions.store');
     Route::get('admissions/{enccode}', [AdmissionController::class, 'show'])->name('admissions.show');
     Route::put('admissions/{enccode}', [AdmissionController::class, 'update'])->name('admissions.update');

@@ -3,6 +3,10 @@ import axios from 'axios';
 export interface AdmissionLog {
     enccode: string;
     hpercode: string;
+    admdate: string; // Added admdate field
+    patfirst: string;
+    patmiddle: string;
+    patlast: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -11,6 +15,8 @@ export interface PaginatedResponse<T> {
     last_page: number;
     total: number;
     per_page: number;
+    from: number | null;
+    to: number | null;
 }
 
 export const admissionHelper = {
@@ -20,30 +26,30 @@ export const admissionHelper = {
         per_page?: number;
         search?: string;
     }): Promise<PaginatedResponse<AdmissionLog>> => {
-        const response = await axios.get('/admission/index', { params });
+        const response = await axios.get('api/admission/datatable', { params });
         return response.data;
     },
 
-    // Get single admission (for future use)
-    getId: async (id: string): Promise<AdmissionLog> => {
-        const response = await axios.get(`/admission/${id}`);
+    // Get single admission
+    getId: async (enccode: string): Promise<AdmissionLog> => {
+        const response = await axios.get(`/admission/${enccode}`);
         return response.data;
     },
 
-    // Create admission (for future use)
+    // Create admission
     store: async (data: Partial<AdmissionLog>): Promise<AdmissionLog> => {
         const response = await axios.post('/admission', data);
         return response.data;
     },
 
-    // Update admission (for future use)
-    update: async (id: string, data: Partial<AdmissionLog>): Promise<AdmissionLog> => {
-        const response = await axios.put(`/admission/${id}`, data);
+    // Update admission
+    update: async (enccode: string, data: Partial<AdmissionLog>): Promise<AdmissionLog> => {
+        const response = await axios.put(`/admission/${enccode}`, data);
         return response.data;
     },
 
-    // Delete admission (for future use)
-    delete: async (id: string): Promise<void> => {
-        await axios.delete(`/admission/${id}`);
+    // Delete admission
+    delete: async (enccode: string): Promise<void> => {
+        await axios.delete(`/admission/${enccode}`);
     },
 };

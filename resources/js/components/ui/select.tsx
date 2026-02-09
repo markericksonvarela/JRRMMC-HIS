@@ -1,5 +1,5 @@
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon, XIcon } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -25,8 +25,18 @@ function SelectValue({
 function SelectTrigger({
   className,
   children,
+  showClear = false,
+  onClear,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger>) {
+}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
+  showClear?: boolean
+  onClear?: () => void
+}) {
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onClear?.()
+  }
+
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
@@ -37,9 +47,21 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
-      </SelectPrimitive.Icon>
+      <div className="flex items-center gap-1">
+        {showClear && onClear && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="pointer-events-auto flex items-center justify-center rounded-sm opacity-50 hover:opacity-100 transition-opacity"
+            aria-label="Clear selection"
+          >
+            <XIcon className="size-4" />
+          </button>
+        )}
+        <SelectPrimitive.Icon asChild>
+          <ChevronDownIcon className="size-4 opacity-50" />
+        </SelectPrimitive.Icon>
+      </div>
     </SelectPrimitive.Trigger>
   )
 }
