@@ -1,100 +1,38 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard, admission, emergency, outpatient } from '@/routes';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import type { BreadcrumbItem } from '@/types';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { HousePlus, Ambulance, ShieldPlus } from "lucide-react";
-import { WardFilter } from '@/components/wardfilter';
+import { dashboard } from '@/routes';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard().url,
+        href: dashboard(),
     },
 ];
 
-type Department = 'admission' | 'emergency' | 'outpatient';
-
 export default function Dashboard() {
-    const [showWardModal, setShowWardModal] = useState(false);
-    const [selectedDepartment, setSelectedDepartment] = useState<Department>('admission');
-
-    const handleDepartmentClick = (dept: Department) => {
-        if (dept === 'admission') {
-            setSelectedDepartment(dept);
-            setShowWardModal(true);
-        } else {
-            if (dept === 'emergency') {
-                setSelectedDepartment(dept);
-                router.visit(emergency().url);
-            } else if (dept === 'outpatient') {
-                setSelectedDepartment(dept);
-                router.visit(outpatient().url);
-            }
-        }
-    };
-
-    const handleWardSelect = (wardcode: string, wardname: string) => {
-        router.get(admission().url, {
-            ward: wardcode,
-            wardname: wardname
-        });
-    };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
+
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div onClick={() => handleDepartmentClick('admission')}>
-                        <Card className="h-40 cursor-pointer bg-green-500 hover:bg-green-600 text-white transition-all hover:scale-[1.03] hover:shadow-xl">
-                            <CardHeader className="flex h-full items-center justify-center">
-                                <CardTitle>
-                                    <div className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
-                                        <HousePlus className="h-10 w-10" />
-                                        ADMISSION
-                                    </div>
-                                </CardTitle>
-                            </CardHeader>
-                        </Card>
+                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
                     </div>
-
-                    <div onClick={() => handleDepartmentClick('emergency')}>
-                        <Card className="h-40 cursor-pointer bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-[1.03] hover:shadow-xl">
-                            <CardHeader className="flex h-full items-center justify-center">
-                                <CardTitle>
-                                    <div className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
-                                        <Ambulance className="h-10 w-10" />
-                                        EMERGENCY
-                                    </div>
-                                </CardTitle>
-                            </CardHeader>
-                        </Card>
+                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
                     </div>
-
-                    <div onClick={() => handleDepartmentClick('outpatient')}>
-                        <Card className="h-40 cursor-pointer bg-blue-500 hover:bg-blue-600 text-white transition-all hover:scale-[1.03] hover:shadow-xl">
-                            <CardHeader className="flex h-full items-center justify-center">
-                                <CardTitle>
-                                    <div className="flex items-center gap-3 text-3xl font-extrabold tracking-tight">
-                                        <ShieldPlus className="h-10 w-10" />
-                                        OUTPATIENT
-                                    </div>
-                                </CardTitle>
-                            </CardHeader>
-                        </Card>
+                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
                     </div>
                 </div>
-            </div>
 
-            <WardFilter
-                open={showWardModal}
-                onClose={() => setShowWardModal(false)}
-                onSelect={handleWardSelect}
-                department={selectedDepartment}
-            />
+                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                </div>
+            </div>
         </AppLayout>
     );
 }

@@ -2,14 +2,32 @@ import { Head, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Eye, Edit, Trash2, BookHeart, ClipboardPlus } from 'lucide-react';
+import { ArrowUpDown, Eye, Edit, Trash2, BookHeart, ClipboardPlus, AlertCircle, Inbox, MessageCircleHeart, FlaskConical, FolderPlus, HeartPulse, NotebookText, FileClock, Info } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { admission } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/datatable';
 import { admissionHelper, AdmissionLog } from '@/helper/admissionHelper';
 import { TableSkeleton } from '@/components/skeleton-table';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { WardFilter } from '@/components/wardfilter';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,17 +42,12 @@ interface Ward {
     wardname: string;
 }
 
-interface Props{
+interface Props {
     ward?: string;
     wardname?: string;
 }
 
 const formTabs = [
-    {
-        label: 'All',
-        value: 'all',
-        filterKey: 'admstat',
-    },
     {
         label: 'Active',
         value: 'active',
@@ -47,42 +60,34 @@ const formTabs = [
         filterKey: 'admstat',
         filterValue: 'I',
     },
+    {
+        label: 'All',
+        value: 'all',
+        filterKey: 'admstat',
+    },
 ];
-
-// Action handlers remain the same...
-const handleView = (enccode: string) => {
-    console.log('View:', enccode);
-};
-
-const handleEdit = (enccode: string) => {
-    console.log('Edit:', enccode);
-};
-
-const handleDelete = async (enccode: string, refreshData: () => void) => {
-    if (confirm('Are you sure you want to delete this admission?')) {
-        try {
-            await admissionHelper.delete(enccode);
-            console.log('Deleted:', enccode);
-            refreshData();
-        } catch (error) {
-            console.error('Error deleting admission:', error);
-            alert('Failed to delete admission. Please try again.');
-        }
-    }
-};
 
 export default function AdmissionIndex({ ward, wardname }: Props) {
     const [data, setData] = useState<AdmissionLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [globalFilter, setGlobalFilter] = useState('');
     const [wards, setWards] = useState<Ward[]>([]);
+    const [showWardModal, setShowWardModal] = useState(!ward);
+    const [error, setError] = useState<string | null>(null);
+    
+    // Delete confirmation dialog state
+    const [deleteDialog, setDeleteDialog] = useState({
+        open: false,
+        enccode: '',
+        patientName: '',
+    });
     
     // Server-side pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [perPage, setPerPage] = useState(15);
-    const [activeTab, setActiveTab] = useState('all');
+    const [activeTab, setActiveTab] = useState('active');
     const [tabCounts, setTabCounts] = useState<Record<string, number>>({
         all: 0,
         active: 0,
@@ -97,17 +102,25 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                 setWards(response.data.data);
             } catch (error) {
                 console.error('Error fetching wards:', error);
+                setError('Failed to load wards. Please refresh the page.');
             }
         };
         fetchWards();
     }, []);
 
     const fetchData = async () => {
+        // Don't fetch data if no ward is selected
+        if (!ward) {
+            setLoading(false);
+            return;
+        }
+
         try {
+            setError(null); // Clear previous errors
             let statusFilter = '';
-                const currentTab = formTabs.find(tab => tab.value === activeTab);
-                if (currentTab?.filterValue) {
-                    statusFilter = currentTab.filterValue;
+            const currentTab = formTabs.find(tab => tab.value === activeTab);
+            if (currentTab?.filterValue) {
+                statusFilter = currentTab.filterValue;
             }
             setLoading(true);
             const response = await admissionHelper.getDatatable({
@@ -126,6 +139,8 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
             setTabCounts(response.tab_counts || tabCounts);
         } catch (error) {
             console.error('Error fetching admission data:', error);
+            setError('Failed to load admission data. Please try again.');
+            setData([]);
         } finally {
             setLoading(false);
         }
@@ -158,6 +173,13 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
         setCurrentPage(1);
     };
 
+    const handleWardSelect = (wardcode: string, wardname: string) => {
+        router.get(admission().url, {
+            ward: wardcode,
+            wardname: wardname
+        });
+    };
+
     const handleWardChange = (wardCode: string, wardName: string) => {
         router.get(admission().url, {
             ward: wardCode,
@@ -175,6 +197,55 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
         });
     };
 
+    const handleSOAP = (enccode: string, patientName: string) => {
+        console.log('Opening SOAP for:', enccode, patientName);
+        // TODO: Navigate to SOAP page or open SOAP modal
+        // router.visit(`/soap/${enccode}`);
+    };
+
+    const handleDoctorsOrder = (enccode: string, patientName: string) => {
+        console.log('Opening Doctor\'s Order for:', enccode, patientName);
+        // TODO: Navigate to Doctor's Order page or open modal
+        // router.visit(`/doctors-order/${enccode}`);
+    };
+
+    const handleView = (enccode: string) => {
+        console.log('View:', enccode);
+        // TODO: Navigate to view page
+        // router.visit(`/admission/${enccode}`);
+    };
+
+    const handleEdit = (enccode: string) => {
+        console.log('Edit:', enccode);
+        // TODO: Navigate to edit page
+        // router.visit(`/admission/${enccode}/edit`);
+    };
+
+    const handleDeleteClick = (enccode: string, patientName: string) => {
+        setDeleteDialog({
+            open: true,
+            enccode,
+            patientName,
+        });
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            await admissionHelper.delete(deleteDialog.enccode);
+            console.log('Deleted:', deleteDialog.enccode);
+            setDeleteDialog({ open: false, enccode: '', patientName: '' });
+            fetchData(); // Refresh the data
+        } catch (error) {
+            console.error('Error deleting admission:', error);
+            setError('Failed to delete admission. Please try again.');
+            setDeleteDialog({ open: false, enccode: '', patientName: '' });
+        }
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteDialog({ open: false, enccode: '', patientName: '' });
+    };
+
     const columns: ColumnDef<AdmissionLog>[] = [
         {
             accessorKey: 'admdate',
@@ -183,6 +254,7 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                        aria-label="Sort by admission date"
                     >
                         Admission Date
                         <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -209,6 +281,7 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                        aria-label="Sort by hospital number"
                     >
                         Hospital Number
                         <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -223,6 +296,7 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                        aria-label="Sort by patient name"
                     >
                         Patient Name (FN, MN, LN)
                         <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -230,71 +304,247 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                 );
             },
         },
-        {
-            id: 'actions',
-            header: 'Actions',
-            cell: ({ row }) => {
-                const admission = row.original;
-                
-                return (
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            title="SOAP"
-                        >
-                            <BookHeart className="h-4 w-4 text-green-500" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            title="DOCTORS ORDER"
-                        >
-                            <ClipboardPlus className="h-4 w-4 text-blue-500" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleView(admission.enccode)}
-                            title="View Details"
-                        >
-                            <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(admission.enccode)}
-                            title="Edit"
-                        >
-                            <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(admission.enccode, fetchData)}
-                            title="Delete"
-                        >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                    </div>
-                );
-            },
-        },
+{
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => {
+        const admission = row.original;
+        
+        return (
+            <TooltipProvider>
+                <div className="flex items-center gap-2">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleSOAP(admission.enccode, admission.patient_name)}
+                                aria-label="View SOAP notes"
+                            >
+                                <BookHeart className="size-6 text-green-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>SOAP Notes</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDoctorsOrder(admission.enccode, admission.patient_name)}
+                                aria-label="View doctor's orders"
+                            >
+                                <ClipboardPlus className="size-6 text-blue-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Doctor's Order</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleView(admission.enccode)}
+                                aria-label="View nurse's notes"
+                            >
+                                <MessageCircleHeart className="size-6 text-purple-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Nurse's Notes</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleView(admission.enccode)}
+                                aria-label="View examination"
+                            >
+                                <FlaskConical className="size-6 text-orange-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Examination</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleView(admission.enccode)}
+                                aria-label="View patient files"
+                            >
+                                <FolderPlus className="size-6 text-amber-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Patient Files</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleView(admission.enccode)}
+                                aria-label="View vital signs"
+                            >
+                                <HeartPulse className="size-6 text-red-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Vital Signs</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleView(admission.enccode)}
+                                aria-label="View course in the ward"
+                            >
+                                <NotebookText className="size-6 text-indigo-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Course in the Ward</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleView(admission.enccode)}
+                                aria-label="View history and diagnosis"
+                            >
+                                <FileClock className="size-6 text-teal-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>History / Diagnosis</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleView(admission.enccode)}
+                                aria-label="View patient basic information"
+                            >
+                                <Info className="size-6 text-sky-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Patient Information</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            </TooltipProvider>
+        );
+    },
+},
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Admission Department" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-4">
-                {loading ? (
+                {/* Error Alert */}
+                {error && (
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription className="flex items-center justify-between">
+                            <span>{error}</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setError(null);
+                                    fetchData();
+                                }}
+                            >
+                                Retry
+                            </Button>
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                {!ward ? (
+                    // Show ward selection prompt when no ward is selected
+                    <Card className="p-8 text-center">
+                        <CardContent className="pt-6">
+                            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                                <BookHeart className="h-6 w-6 text-primary" />
+                            </div>
+                            <h2 className="text-2xl font-semibold mb-2">Select a Ward</h2>
+                            <p className="text-muted-foreground mb-6">
+                                Please select a ward to view admission patients
+                            </p>
+                            <Button onClick={() => setShowWardModal(true)} size="lg">
+                                Choose Ward
+                            </Button>
+                        </CardContent>
+                    </Card>
+                ) : loading ? (
                     <Card className="border border-sidebar-border/70">
                         <TableSkeleton rows={10} columns={9} />
+                    </Card>
+                ) : data.length === 0 ? (
+                    // Empty State
+                    <Card className="p-12 text-center">
+                        <CardContent className="pt-6">
+                            <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                <Inbox className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-xl font-semibold mb-2">No Admission Records Found</h3>
+                            <p className="text-muted-foreground mb-6">
+                                {globalFilter 
+                                    ? `No results found for "${globalFilter}"`
+                                    : `There are no ${activeTab !== 'all' ? activeTab : ''} admission records in ${wardname || 'this ward'}.`
+                                }
+                            </p>
+                            <div className="flex items-center justify-center gap-3">
+                                {globalFilter && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setGlobalFilter('')}
+                                    >
+                                        Clear Search
+                                    </Button>
+                                )}
+                                <Button
+                                    variant={globalFilter ? "outline" : "default"}
+                                    onClick={() => setShowWardModal(true)}
+                                >
+                                    Choose Different Ward
+                                </Button>
+                            </div>
+                        </CardContent>
                     </Card>
                 ) : (
                     <DataTable
                         columns={columns}
                         data={data}
-                        filterColumn="enccode"
+                        filterColumn="hpercode"
                         filterPlaceholder="Search Patient"
                         manualPagination={true}
                         pageCount={lastPage}
@@ -317,6 +567,39 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                     />
                 )}
             </div>
+
+            {/* Ward Filter Modal */}
+            <WardFilter
+                open={showWardModal}
+                onClose={() => setShowWardModal(false)}
+                onSelect={handleWardSelect}
+                department="admission"
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={deleteDialog.open} onOpenChange={handleDeleteCancel}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the admission record for{' '}
+                            <span className="font-semibold">{deleteDialog.patientName}</span>.
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={handleDeleteCancel}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteConfirm}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }

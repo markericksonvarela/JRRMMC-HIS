@@ -1,10 +1,10 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Dna, Folder, LayoutGrid, SquareUserRound, Stethoscope, Brain, Accessibility, Hand } from 'lucide-react';
+import { BookOpen, Dna, Folder, LayoutGrid, SquareUserRound, Stethoscope, Brain, Accessibility, Hand, Ambulance, Hospital, University } from 'lucide-react';
 // import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { dashboard, patrecord, registries, trauma, cancer, geria, skin } from '@/routes';
+import { dashboard, patrecord, registries, trauma, cancer, geria, skin, admission, emergency, outpatient } from '@/routes';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
 
@@ -14,6 +14,27 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Departments',
+        icon: University,
+        children: [
+            {
+                title: 'Admission',
+                href: admission(),
+                icon: Hospital,
+            },
+            {
+                title: 'Emergency',
+                href: emergency(),
+                icon: Ambulance,
+            },
+            {
+                title: 'Outpatient',
+                href: outpatient(),
+                icon: Accessibility,
+            },
+        ],
     },
     {
         title: 'Registries',
