@@ -4,9 +4,15 @@ export interface AdmissionLog {
     enccode: string;
     hpercode: string;
     admdate: string;
-    patfirst: string;
-    patmiddle: string;
-    patlast: string;
+    patient_name: string; // This matches what your backend returns
+    patsex: string;
+    age: number;
+    admtime: string;
+    tsdesc: string;
+    wardname: string;
+    wardcode: string;
+    rmname: string;
+    bdname: string;
     admstat: string;
 }
 
@@ -30,30 +36,38 @@ export const admissionHelper = {
         ward?: string;
         status?: string;
     }): Promise<PaginatedResponse<AdmissionLog>> => {
-        const response = await axios.get('api/admission/datatable', { params });
+        const response = await axios.get('/api/admission/datatable', { 
+            params: {
+                page: params.page || 1,
+                per_page: params.per_page || 15,
+                search: params.search || '',
+                ward: params.ward || '',
+                status: params.status || '',
+            }
+        });
         return response.data;
     },
 
     // Get single admission
     getId: async (enccode: string): Promise<AdmissionLog> => {
-        const response = await axios.get(`/admission/${enccode}`);
+        const response = await axios.get(`/api/admission/${enccode}`);
         return response.data;
     },
 
     // Create admission
     store: async (data: Partial<AdmissionLog>): Promise<AdmissionLog> => {
-        const response = await axios.post('/admission', data);
+        const response = await axios.post('/api/admission', data);
         return response.data;
     },
 
     // Update admission
     update: async (enccode: string, data: Partial<AdmissionLog>): Promise<AdmissionLog> => {
-        const response = await axios.put(`/admission/${enccode}`, data);
+        const response = await axios.put(`/api/admission/${enccode}`, data);
         return response.data;
     },
 
     // Delete admission
     delete: async (enccode: string): Promise<void> => {
-        await axios.delete(`/admission/${enccode}`);
+        await axios.delete(`/api/admission/${enccode}`);
     },
 };

@@ -1,8 +1,8 @@
 import { Head, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Eye, Edit, Trash2, BookHeart, ClipboardPlus, AlertCircle, Inbox, MessageCircleHeart, FlaskConical, FolderPlus, HeartPulse, NotebookText, FileClock, Info } from 'lucide-react';
+import { ArrowUpDown, BookHeart, ClipboardPlus, AlertCircle, Inbox, MessageCircleHeart, FlaskConical, FolderPlus, HeartPulse, NotebookText, FileClock, Info } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { admission } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -75,14 +75,12 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
     const [showWardModal, setShowWardModal] = useState(!ward);
     const [error, setError] = useState<string | null>(null);
     
-    // Delete confirmation dialog state
     const [deleteDialog, setDeleteDialog] = useState({
         open: false,
         enccode: '',
         patientName: '',
     });
     
-    // Server-side pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -94,7 +92,9 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
         discharged: 0
     });
 
-    // Fetch wards on mount
+    // Use ref to track if we should reset page on search
+    const isSearching = useRef(false);
+
     useEffect(() => {
         const fetchWards = async () => {
             try {
@@ -108,15 +108,14 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
         fetchWards();
     }, []);
 
-    const fetchData = async () => {
-        // Don't fetch data if no ward is selected
+    const fetchData = useCallback(async () => {
         if (!ward) {
             setLoading(false);
             return;
         }
 
         try {
-            setError(null); // Clear previous errors
+            setError(null);
             let statusFilter = '';
             const currentTab = formTabs.find(tab => tab.value === activeTab);
             if (currentTab?.filterValue) {
@@ -136,7 +135,9 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
             setLastPage(response.last_page);
             setTotal(response.total);
             setPerPage(response.per_page);
-            setTabCounts(response.tab_counts || tabCounts);
+            if (response.tab_counts) {
+                setTabCounts(response.tab_counts);
+            }
         } catch (error) {
             console.error('Error fetching admission data:', error);
             setError('Failed to load admission data. Please try again.');
@@ -144,19 +145,22 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, perPage, globalFilter, ward, activeTab]);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             fetchData();
-        }, 300);
+        }, 600); // Increased to 600ms
 
         return () => clearTimeout(timeoutId);
-    }, [currentPage, perPage, globalFilter, ward, activeTab]);
+    }, [fetchData]);
 
     const handleSearchChange = (search: string) => {
         setGlobalFilter(search);
-        setCurrentPage(1);
+        // Only reset to page 1 if search value actually changed
+        if (search !== globalFilter) {
+            setCurrentPage(1);
+        }
     };
 
     const handlePageChange = (page: number) => {
@@ -199,26 +203,18 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
 
     const handleSOAP = (enccode: string, patientName: string) => {
         console.log('Opening SOAP for:', enccode, patientName);
-        // TODO: Navigate to SOAP page or open SOAP modal
-        // router.visit(`/soap/${enccode}`);
     };
 
     const handleDoctorsOrder = (enccode: string, patientName: string) => {
         console.log('Opening Doctor\'s Order for:', enccode, patientName);
-        // TODO: Navigate to Doctor's Order page or open modal
-        // router.visit(`/doctors-order/${enccode}`);
     };
 
     const handleView = (enccode: string) => {
         console.log('View:', enccode);
-        // TODO: Navigate to view page
-        // router.visit(`/admission/${enccode}`);
     };
 
     const handleEdit = (enccode: string) => {
         console.log('Edit:', enccode);
-        // TODO: Navigate to edit page
-        // router.visit(`/admission/${enccode}/edit`);
     };
 
     const handleDeleteClick = (enccode: string, patientName: string) => {
@@ -234,7 +230,7 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
             await admissionHelper.delete(deleteDialog.enccode);
             console.log('Deleted:', deleteDialog.enccode);
             setDeleteDialog({ open: false, enccode: '', patientName: '' });
-            fetchData(); // Refresh the data
+            fetchData();
         } catch (error) {
             console.error('Error deleting admission:', error);
             setError('Failed to delete admission. Please try again.');
@@ -304,170 +300,169 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                 );
             },
         },
-{
-    id: 'actions',
-    header: 'Actions',
-    cell: ({ row }) => {
-        const admission = row.original;
-        
-        return (
-            <TooltipProvider>
-                <div className="flex items-center gap-2">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleSOAP(admission.enccode, admission.patient_name)}
-                                aria-label="View SOAP notes"
-                            >
-                                <BookHeart className="size-6 text-green-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>SOAP Notes</p>
-                        </TooltipContent>
-                    </Tooltip>
+        {
+            id: 'actions',
+            header: 'Actions',
+            cell: ({ row }) => {
+                const admission = row.original;
+                
+                return (
+                    <TooltipProvider>
+                        <div className="flex items-center gap-2">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleSOAP(admission.enccode, admission.patient_name)}
+                                        aria-label="View SOAP notes"
+                                    >
+                                        <BookHeart className="size-6 text-green-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>SOAP Notes</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDoctorsOrder(admission.enccode, admission.patient_name)}
-                                aria-label="View doctor's orders"
-                            >
-                                <ClipboardPlus className="size-6 text-blue-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Doctor's Order</p>
-                        </TooltipContent>
-                    </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDoctorsOrder(admission.enccode, admission.patient_name)}
+                                        aria-label="View doctor's orders"
+                                    >
+                                        <ClipboardPlus className="size-6 text-blue-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Doctor's Order</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleView(admission.enccode)}
-                                aria-label="View nurse's notes"
-                            >
-                                <MessageCircleHeart className="size-6 text-purple-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Nurse's Notes</p>
-                        </TooltipContent>
-                    </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleView(admission.enccode)}
+                                        aria-label="View nurse's notes"
+                                    >
+                                        <MessageCircleHeart className="size-6 text-purple-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Nurse's Notes</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleView(admission.enccode)}
-                                aria-label="View examination"
-                            >
-                                <FlaskConical className="size-6 text-orange-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Examination</p>
-                        </TooltipContent>
-                    </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleView(admission.enccode)}
+                                        aria-label="View examination"
+                                    >
+                                        <FlaskConical className="size-6 text-orange-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Examination</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleView(admission.enccode)}
-                                aria-label="View patient files"
-                            >
-                                <FolderPlus className="size-6 text-amber-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Patient Files</p>
-                        </TooltipContent>
-                    </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleView(admission.enccode)}
+                                        aria-label="View patient files"
+                                    >
+                                        <FolderPlus className="size-6 text-amber-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Patient Files</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleView(admission.enccode)}
-                                aria-label="View vital signs"
-                            >
-                                <HeartPulse className="size-6 text-red-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Vital Signs</p>
-                        </TooltipContent>
-                    </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleView(admission.enccode)}
+                                        aria-label="View vital signs"
+                                    >
+                                        <HeartPulse className="size-6 text-red-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Vital Signs</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleView(admission.enccode)}
-                                aria-label="View course in the ward"
-                            >
-                                <NotebookText className="size-6 text-indigo-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Course in the Ward</p>
-                        </TooltipContent>
-                    </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleView(admission.enccode)}
+                                        aria-label="View course in the ward"
+                                    >
+                                        <NotebookText className="size-6 text-indigo-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Course in the Ward</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleView(admission.enccode)}
-                                aria-label="View history and diagnosis"
-                            >
-                                <FileClock className="size-6 text-teal-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>History / Diagnosis</p>
-                        </TooltipContent>
-                    </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleView(admission.enccode)}
+                                        aria-label="View history and diagnosis"
+                                    >
+                                        <FileClock className="size-6 text-teal-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>History / Diagnosis</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleView(admission.enccode)}
-                                aria-label="View patient basic information"
-                            >
-                                <Info className="size-6 text-sky-500" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Patient Information</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </div>
-            </TooltipProvider>
-        );
-    },
-},
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleView(admission.enccode)}
+                                        aria-label="View patient basic information"
+                                    >
+                                        <Info className="size-6 text-sky-500" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Patient Information</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </div>
+                    </TooltipProvider>
+                );
+            },
+        },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Admission Department" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-4">
-                {/* Error Alert */}
                 {error && (
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
@@ -489,7 +484,6 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                 )}
 
                 {!ward ? (
-                    // Show ward selection prompt when no ward is selected
                     <Card className="p-8 text-center">
                         <CardContent className="pt-6">
                             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -509,7 +503,6 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                         <TableSkeleton rows={10} columns={9} />
                     </Card>
                 ) : data.length === 0 ? (
-                    // Empty State
                     <Card className="p-12 text-center">
                         <CardContent className="pt-6">
                             <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -568,7 +561,6 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                 )}
             </div>
 
-            {/* Ward Filter Modal */}
             <WardFilter
                 open={showWardModal}
                 onClose={() => setShowWardModal(false)}
@@ -576,7 +568,6 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                 department="admission"
             />
 
-            {/* Delete Confirmation Dialog */}
             <AlertDialog open={deleteDialog.open} onOpenChange={handleDeleteCancel}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

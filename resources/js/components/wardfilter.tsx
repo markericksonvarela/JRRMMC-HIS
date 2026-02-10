@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Ward {
     wardcode: string;
@@ -86,7 +87,12 @@ export function WardFilter({ open, onClose, onSelect, department }: WardFilterPr
                                 value={selectedWard}
                                 onValueChange={setSelectedWard}
                             >
-                                <SelectTrigger id="ward">
+                                <SelectTrigger 
+                                    id="ward"
+                                    className={cn(
+                                        selectedWard && "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 ring-yellow-500/20 focus:ring-yellow-500/30"
+                                    )}
+                                >
                                     <SelectValue placeholder="Select a ward" />
                                 </SelectTrigger>
                                 <SelectContent>
