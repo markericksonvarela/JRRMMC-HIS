@@ -39,6 +39,7 @@ class EmergencyModel extends Model
                 'herlog.enccode',
                 'herlog.hpercode',
                 'herlog.erstat',
+                'herlog.erdate',
                 'hperson.patsex',
                 'htypser.tsdesc',
                 'htypser.tscode',
@@ -60,9 +61,7 @@ class EmergencyModel extends Model
                         ELSE ', ' + RTRIM(LTRIM(hperson.patmiddle))
                     END
                 ) AS name"),
-                DB::raw("CONVERT(INTEGER, herlog.patage, 0) AS age"),
-                DB::raw("CONVERT(VARCHAR(10), herlog.erdate, 101) AS erdate"),
-                DB::raw("ISNULL(FORMAT(CAST(herlog.ertime AS TIME), N'hh:mm tt'), 'N/A') AS ertime")
+                DB::raw("CONVERT(INTEGER, herlog.patage, 0) AS age")
             );
 
         return $query;
