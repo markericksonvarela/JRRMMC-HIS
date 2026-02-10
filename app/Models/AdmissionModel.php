@@ -34,6 +34,7 @@ class AdmissionModel extends Model
             ->select(
                 'hadmlog.enccode',
                 'hadmlog.hpercode',
+                'hadmlog.admdate',
                 'hperson.patsex',
                 'htypser.tsdesc',
                 'hward.wardname',
@@ -54,9 +55,7 @@ class AdmissionModel extends Model
                         ELSE ', ' + RTRIM(LTRIM(hperson.patmiddle))
                     END
                 ) AS patient_name"),
-                DB::raw("CONVERT(INTEGER, hadmlog.patage, 0) AS age"),
-                DB::raw("CONVERT(VARCHAR(10), hadmlog.admdate, 101) AS admdate"),
-                DB::raw("ISNULL(FORMAT(CAST(hadmlog.admtime AS TIME), N'hh:mm tt'), 'N/A') AS admtime")
+                DB::raw("CONVERT(INTEGER, hadmlog.patage, 0) AS age")
             );
 
         return $query;

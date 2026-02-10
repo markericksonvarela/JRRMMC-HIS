@@ -41,6 +41,7 @@ class OutpatientModel extends Model
                 'hopdlog.hpercode',
                 'hopdlog.opddisp',
                 'hopdlog.opdstat',
+                'hopdlog.opddate',
                 'hperson.patsex',
                 'htypser.tsdesc',
                 'hward.wardname',
@@ -61,9 +62,7 @@ class OutpatientModel extends Model
                         ELSE ', ' + RTRIM(LTRIM(hperson.patmiddle))
                     END
                 ) AS name"),
-                DB::raw("CONVERT(INTEGER, hopdlog.patage, 0) AS age"),
-                DB::raw("CONVERT(VARCHAR(10), hopdlog.opddate, 101) AS opddate"),
-                DB::raw("ISNULL(FORMAT(CAST(hopdlog.opdtime AS TIME), N'hh:mm tt'), 'N/A') AS opdtime")
+                DB::raw("CONVERT(INTEGER, hopdlog.patage, 0) AS age")
             );
 
         return $query;
