@@ -8,6 +8,7 @@ export interface Patient {
     opddate?: string;
     opdtime?: string;
     opddisp?: string;
+    opdstat?: string;
 }
 
 export interface CancerPatient {

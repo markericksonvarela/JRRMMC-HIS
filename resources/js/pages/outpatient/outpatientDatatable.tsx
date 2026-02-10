@@ -24,25 +24,58 @@ interface Props {
     error?: string;
 }
 
+const formTabs = [
+    {
+        label: 'All',
+        value: 'all',
+        filterKey: 'opdstat',
+    },
+    {
+        label: 'Active',
+        value: 'active',
+        filterKey: 'opdstat',
+        filterValue: 'A',
+    },
+    {
+        label: 'Discharged',
+        value: 'discharged',
+        filterKey: 'opdstat',
+        filterValue: 'I',
+    },
+];
+
 export default function OutpatientDepartment({ patients, filters, error }: Props) {
-    const [isLoading ] = useState(false);
-    const [data, setData] = useState<Patient[]>( [] );
+    const [data, setData] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
     const [globalFilter, setGlobalFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
-    const [perPage, setPerPage] = useState(100);
+    const [perPage, setPerPage] = useState(15);
+    const [activeTab, setActiveTab] = useState('all');
+    const [tabCounts, setTabCounts] = useState<Record<string, number>>({
+        all: 0,
+        active: 0,
+        discharged: 0
+    });
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get('/outpatient/outpatientDatatable', {
+                
+                let statusFilter = '';
+                const currentTab = formTabs.find(tab => tab.value === activeTab);
+                if (currentTab?.filterValue) {
+                    statusFilter = currentTab.filterValue;
+                }
+                
+                const response = await axios.get('/api/outpatient/datatable', {
                     params: {
                         page: currentPage,
                         per_page: perPage,
                         search: globalFilter,
+                        status: statusFilter,
                     }
                 });
                 
@@ -51,6 +84,7 @@ export default function OutpatientDepartment({ patients, filters, error }: Props
                 setLastPage(response.data.last_page);
                 setTotal(response.data.total);
                 setPerPage(response.data.per_page);
+                setTabCounts(response.data.tab_counts || tabCounts);
             } catch (error) {
                 console.error('Error fetching outpatient data:', error);
             } finally {
@@ -63,7 +97,7 @@ export default function OutpatientDepartment({ patients, filters, error }: Props
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [currentPage, perPage, globalFilter]);
+    }, [currentPage, perPage, globalFilter, activeTab]);
 
     const handleSearchChange = (search: string) => {
         setGlobalFilter(search);
@@ -76,6 +110,11 @@ export default function OutpatientDepartment({ patients, filters, error }: Props
 
     const handlePerPageChange = (newPerPage: number) => {
         setPerPage(newPerPage);
+        setCurrentPage(1);
+    };
+
+    const handleTabChange = (tabValue: string) => {
+        setActiveTab(tabValue);
         setCurrentPage(1);
     };
 
@@ -116,7 +155,7 @@ export default function OutpatientDepartment({ patients, filters, error }: Props
                         columns={patientColumns}
                         data={data}
                         filterColumn="enccode"
-                        filterPlaceholder="Search admissions..."
+                        filterPlaceholder="Search Patient"
                         manualPagination={true}
                         pageCount={lastPage}
                         currentPage={currentPage}
@@ -126,6 +165,10 @@ export default function OutpatientDepartment({ patients, filters, error }: Props
                         total={total}
                         loading={loading}
                         onSearchChange={handleSearchChange}
+                        tabs={formTabs}
+                        onTabChange={handleTabChange}
+                        activeTabValue={activeTab}
+                        tabCounts={tabCounts}
                     />
                 )}
             </div>

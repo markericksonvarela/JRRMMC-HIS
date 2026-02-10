@@ -1,14 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { se } from 'date-fns/locale';
 
 interface Ward {
     wardcode: string;
@@ -26,7 +23,6 @@ interface DataTableProps<TData, TValue> {
         filterKey: string;
         filterValue?: string;
     }[];
-    // Server-side pagination props
     manualPagination?: boolean;
     pageCount?: number;
     currentPage?: number;
@@ -36,12 +32,14 @@ interface DataTableProps<TData, TValue> {
     total?: number;
     loading?: boolean;
     onSearchChange?: (search: string) => void;
-    // Ward filter props
     wards?: Ward[];
     selectedWard?: string;
     selectedWardName?: string;
     onWardChange?: (wardCode: string, wardName: string) => void;
     onClearWard?: () => void;
+    onTabChange?: (tabValue: string) => void;
+    activeTabValue?: string;
+    tabCounts?: Record<string, number>; // Add this
 }
 
 export function DataTable<TData, TValue>({
@@ -64,12 +62,21 @@ export function DataTable<TData, TValue>({
     selectedWardName,
     onWardChange,
     onClearWard,
+    onTabChange,
+    activeTabValue,
+    tabCounts,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = useState({});
-    const [activeTab, setActiveTab] = useState(tabs?.[0]?.value || 'all');
+    const [activeTab, setActiveTab] = useState(activeTabValue || tabs?.[0]?.value || 'all');
+
+    useEffect(() => {
+        if (activeTabValue !== undefined) {
+            setActiveTab(activeTabValue);
+        }
+    }, [activeTabValue]);
 
     const table = useReactTable({
         data,
@@ -95,18 +102,30 @@ export function DataTable<TData, TValue>({
         setActiveTab(value);
         const tab = tabs?.find(t => t.value === value);
         
-        if (tab && tab.filterValue) {
+        if (onTabChange) {
+            onTabChange(value);
+        }
+        
+        if (!manualPagination && tab && tab.filterValue) {
             table.getColumn(tab.filterKey)?.setFilterValue(tab.filterValue);
-        } else {
+        } else if (!manualPagination) {
             tabs?.forEach(t => {
                 table.getColumn(t.filterKey)?.setFilterValue(undefined);
             });
         }
     };
 
-    const getFilteredRowCount = (tab: { filterKey: string; filterValue?: string }) => {
+    const getFilteredRowCount = (tab: { value: string; filterKey: string; filterValue?: string }) => {
+        if (manualPagination && tabCounts) {
+            return tabCounts[tab.value] || 0;
+        }
+        
+        if (manualPagination) {
+            return tab.value === activeTab ? total : 0;
+        }
+
         if (!tab.filterValue) {
-            return manualPagination ? total : data.length;
+            return data.length;
         }
         return data.filter((row: any) => row[tab.filterKey] === tab.filterValue).length;
     };
@@ -370,7 +389,7 @@ export function DataTable<TData, TValue>({
                             >
                                 {tab.label}
                                 <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-normal">
-                                    {getFilteredRowCount(tab)}
+                                    {getFilteredRowCount(tab).toLocaleString()}
                                 </span>
                             </TabsTrigger>
                         ))}

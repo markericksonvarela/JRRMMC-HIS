@@ -29,6 +29,26 @@ interface Props{
     wardname?: string;
 }
 
+const formTabs = [
+    {
+        label: 'All',
+        value: 'all',
+        filterKey: 'admstat',
+    },
+    {
+        label: 'Active',
+        value: 'active',
+        filterKey: 'admstat',
+        filterValue: 'A',
+    },
+    {
+        label: 'Discharged',
+        value: 'discharged',
+        filterKey: 'admstat',
+        filterValue: 'I',
+    },
+];
+
 // Action handlers remain the same...
 const handleView = (enccode: string) => {
     console.log('View:', enccode);
@@ -62,6 +82,12 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [perPage, setPerPage] = useState(15);
+    const [activeTab, setActiveTab] = useState('all');
+    const [tabCounts, setTabCounts] = useState<Record<string, number>>({
+        all: 0,
+        active: 0,
+        discharged: 0
+    });
 
     // Fetch wards on mount
     useEffect(() => {
@@ -78,12 +104,18 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
 
     const fetchData = async () => {
         try {
+            let statusFilter = '';
+                const currentTab = formTabs.find(tab => tab.value === activeTab);
+                if (currentTab?.filterValue) {
+                    statusFilter = currentTab.filterValue;
+            }
             setLoading(true);
             const response = await admissionHelper.getDatatable({
                 page: currentPage,
                 per_page: perPage,
                 search: globalFilter,
                 ward: ward,
+                status: statusFilter,
             });
             
             setData(response.data);
@@ -91,6 +123,7 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
             setLastPage(response.last_page);
             setTotal(response.total);
             setPerPage(response.per_page);
+            setTabCounts(response.tab_counts || tabCounts);
         } catch (error) {
             console.error('Error fetching admission data:', error);
         } finally {
@@ -104,7 +137,7 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [currentPage, perPage, globalFilter, ward]);
+    }, [currentPage, perPage, globalFilter, ward, activeTab]);
 
     const handleSearchChange = (search: string) => {
         setGlobalFilter(search);
@@ -117,6 +150,11 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
 
     const handlePerPageChange = (newPerPage: number) => {
         setPerPage(newPerPage);
+        setCurrentPage(1);
+    };
+
+    const handleTabChange = (tabValue: string) => {
+        setActiveTab(tabValue);
         setCurrentPage(1);
     };
 
@@ -272,6 +310,10 @@ export default function AdmissionIndex({ ward, wardname }: Props) {
                         selectedWardName={wardname}
                         onWardChange={handleWardChange}
                         onClearWard={handleClearWard}
+                        tabs={formTabs}
+                        onTabChange={handleTabChange}
+                        activeTabValue={activeTab}
+                        tabCounts={tabCounts}
                     />
                 )}
             </div>
