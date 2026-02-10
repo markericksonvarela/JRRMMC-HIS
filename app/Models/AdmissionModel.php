@@ -31,7 +31,6 @@ class AdmissionModel extends Model
             ->leftJoin('hbed', 'hpatroom.bdintkey', '=', 'hbed.bdintkey')
             ->leftJoin('hward', 'hbed.wardcode', '=', 'hward.wardcode')
             ->leftJoin('hroom', 'hbed.rmintkey', '=', 'hroom.rmintkey')
-            ->where('hadmlog.admstat', 'A')
             ->select(
                 'hadmlog.enccode',
                 'hadmlog.hpercode',

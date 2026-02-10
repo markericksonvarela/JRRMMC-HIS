@@ -9,12 +9,30 @@ class OutpatientController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 100);
+        $perPage = $request->get('per_page', 25);
         $page = $request->get('page', 1);
+        $status = $request->get('status','');
+        // $ward = $request->get('ward', '');
 
         $query = OutpatientModel::getPatientsList();
 
+        if ($status && in_array($status, ['A', 'I'])) {
+            $query->where('hopdlog.opdstat', $status);
+        }
+
+        // if ($ward) {
+        //     $query->where('hward.wardcode', $ward);
+        // }
+
         $patient = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $baseQuery = OutpatientModel::getPatientsList();
+        
+        $tabCounts = [
+            'all' => $baseQuery->count(),
+            'active' => (clone $baseQuery)->where('hopdlog.opdstat', 'A')->count(),
+            'discharged' => (clone $baseQuery)->where('hopdlog.opdstat', 'I')->count(),
+        ];
 
         return response()->json([
             'data' => $patient->items(),
@@ -24,6 +42,7 @@ class OutpatientController extends Controller
             'total' => $patient->total(),
             'from' => $patient->firstItem(),
             'to' => $patient->lastItem(),
+            'tab_counts' => $tabCounts,
         ]);
     }
 
@@ -92,52 +111,6 @@ class OutpatientController extends Controller
             return back()
                 ->withInput()
                 ->withErrors(['error' => 'Failed to register patient.']);
-        }
-    }
-
-    public function edit(string $enccode)
-    {
-        try {
-            $patient = OutpatientModel::getPatientByEnccode($enccode);
-
-            if (!$patient) {
-                return redirect()->route('outpatient')
-                    ->with('error', 'Patient not found.');
-            }
-
-            return Inertia::render('outpatient/Edit', [
-                'patient' => OutpatientModel::getPatientInformation($patient),
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Outpatient edit error: ' . $e->getMessage());
-            
-            return redirect()->route('outpatient')
-                ->with('error', 'Failed to load patient for editing.');
-        }
-    }
-
-    public function update(Request $request, string $enccode)
-    {
-        try {
-            $patient = OutpatientModel::where('enccode', $enccode)->firstOrFail();
-
-            $validated = $request->validate([
-                'tscode' => 'required|string',
-                'opddate' => 'required|date',
-                'opdtime' => 'required',
-                'opdstat' => 'sometimes|string',
-            ]);
-
-            $patient->update($validated);
-
-            return redirect()->route('outpatient')
-                ->with('success', 'Patient updated successfully.');
-        } catch (\Exception $e) {
-            \Log::error('Outpatient update error: ' . $e->getMessage());
-            
-            return back()
-                ->withInput()
-                ->withErrors(['error' => 'Failed to update patient.']);
         }
     }
 

@@ -12,6 +12,7 @@ class AdmissionController extends Controller
         $perPage = $request->get('per_page', 100);
         $page = $request->get('page', 1);
         $ward = $request->get('ward', '');
+        $status = $request->get('status','');
 
         $query = AdmissionModel::getPatientsList();
 
@@ -19,7 +20,20 @@ class AdmissionController extends Controller
             $query->where('hward.wardcode', $ward);
         }
 
+        if ($status && in_array($status, ['A', 'I'])) {
+            $query->where('hadmlog.admstat', $status);
+        }
+        
+
         $patient = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $baseQuery = AdmissionModel::getPatientsList();
+        
+        $tabCounts = [
+            'all' => $baseQuery->count(),
+            'active' => (clone $baseQuery)->where('hadmlog.admstat', 'A')->count(),
+            'discharged' => (clone $baseQuery)->where('hadmlog.admstat', 'I')->count(),
+        ];
 
         return response()->json([
             'data' => $patient->items(),
@@ -29,6 +43,7 @@ class AdmissionController extends Controller
             'total' => $patient->total(),
             'from' => $patient->firstItem(),
             'to' => $patient->lastItem(),
+            'tab_counts' => $tabCounts,
         ]);
     }
 

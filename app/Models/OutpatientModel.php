@@ -29,13 +29,24 @@ class OutpatientModel extends Model
     private static function datatable(array $filters = [])
     {
         $query = DB::table('hopdlog')
-            ->join('hperson', 'hopdlog.hpercode', '=', 'hperson.hpercode')
-            ->join('htypser', 'htypser.tscode', '=', 'hopdlog.tscode')
-            ->join('henctr', 'henctr.enccode', '=', 'hopdlog.enccode')
-            ->where('hopdlog.opdstat', 'A')
+            ->join('hperson', 'hopdlog.hpercode', '=', 'hperson.hpercode', 'inner')
+            ->leftJoin('htypser', 'htypser.tscode', '=', 'hopdlog.tscode')
+            ->leftJoin('henctr', 'henctr.enccode', '=', 'hopdlog.enccode')
+            ->leftJoin('hpatroom', 'hpatroom.enccode', '=', 'hopdlog.enccode')
+            ->leftJoin('hbed', 'hpatroom.bdintkey', '=', 'hbed.bdintkey')
+            ->leftJoin('hward', 'hbed.wardcode', '=', 'hward.wardcode')
+            ->leftJoin('hroom', 'hbed.rmintkey', '=', 'hroom.rmintkey')
             ->select(
                 'hopdlog.enccode',
                 'hopdlog.hpercode',
+                'hopdlog.opddisp',
+                'hopdlog.opdstat',
+                'hperson.patsex',
+                'htypser.tsdesc',
+                'hward.wardname',
+                'hward.wardcode',
+                'hroom.rmname',
+                'hbed.bdname',
                 DB::raw("(
                     RTRIM(LTRIM(hperson.patlast)) + ', ' +
                     RTRIM(LTRIM(hperson.patfirst)) +
@@ -51,11 +62,8 @@ class OutpatientModel extends Model
                     END
                 ) AS name"),
                 DB::raw("CONVERT(INTEGER, hopdlog.patage, 0) AS age"),
-                'hperson.patsex',
-                'htypser.tsdesc',
                 DB::raw("CONVERT(VARCHAR(10), hopdlog.opddate, 101) AS opddate"),
-                DB::raw("ISNULL(FORMAT(CAST(hopdlog.opdtime AS TIME), N'hh:mm tt'), 'N/A') AS opdtime"),
-                'hopdlog.opddisp'
+                DB::raw("ISNULL(FORMAT(CAST(hopdlog.opdtime AS TIME), N'hh:mm tt'), 'N/A') AS opdtime")
             );
 
         return $query;
@@ -91,6 +99,7 @@ class OutpatientModel extends Model
             'opddate' => $patient->opddate ?? null,
             'opdtime' => $patient->opdtime ?? null,
             'opddisp' => $patient->opddisp ?? null,
+            'opdstat' => $patient->opdstat ?? null,
         ];
     }
 

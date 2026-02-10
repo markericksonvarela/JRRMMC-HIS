@@ -7,6 +7,7 @@ export interface AdmissionLog {
     patfirst: string;
     patmiddle: string;
     patlast: string;
+    admstat: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -17,6 +18,7 @@ export interface PaginatedResponse<T> {
     per_page: number;
     from: number | null;
     to: number | null;
+    tab_counts?: Record<string, number>;
 }
 
 export const admissionHelper = {
@@ -26,6 +28,7 @@ export const admissionHelper = {
         per_page?: number;
         search?: string;
         ward?: string;
+        status?: string;
     }): Promise<PaginatedResponse<AdmissionLog>> => {
         const response = await axios.get('api/admission/datatable', { params });
         return response.data;

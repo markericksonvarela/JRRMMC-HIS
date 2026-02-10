@@ -29,8 +29,34 @@ export const patientColumns: ColumnDef<Patient>[] = [
         enableHiding: false,
     },
     {
+        accessorKey: 'opddate',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                >
+                    Date/Time Registered
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            );
+        },
+        cell: ({ row }) => {
+            const date = row.getValue('opddate') as string;
+            return date ? new Date(date).toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            }) : '';
+        },
+    },
+    {
         accessorKey: 'hpercode',
-        header: 'Patient Code',
+        header: 'Hospital Code',
         cell: ({ row }) => (
             <div className="font-medium">{row.getValue('hpercode')}</div>
         ),
@@ -52,52 +78,35 @@ export const patientColumns: ColumnDef<Patient>[] = [
             <div className="font-medium">{row.getValue('name')}</div>
         ),
     },
-    {
-        accessorKey: 'age',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                >
-                    Patient Age
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => (
-            <div className="text-center">{row.getValue('age')}</div>
-        ),
-    },
-    {
-        accessorKey: 'patsex',
-        header: 'Sex',
-        cell: ({ row }) => (
-            <div>{row.getValue('patsex')}</div>
-        ),
-    },
+    // {
+    //     accessorKey: 'age',
+    //     header: ({ column }) => {
+    //         return (
+    //             <Button
+    //                 variant="ghost"
+    //                 onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+    //             >
+    //                 Patient Age
+    //                 <ArrowUpDown className="ml-2 h-4 w-4" />
+    //             </Button>
+    //         );
+    //     },
+    //     cell: ({ row }) => (
+    //         <div className="text-center">{row.getValue('age')}</div>
+    //     ),
+    // },
+    // {
+    //     accessorKey: 'patsex',
+    //     header: 'Sex',
+    //     cell: ({ row }) => (
+    //         <div>{row.getValue('patsex')}</div>
+    //     ),
+    // },
     {
         accessorKey: 'tsdesc',
         header: 'Service',
         cell: ({ row }) => (
             <div>{row.getValue('tsdesc')}</div>
-        ),
-    },
-    {
-        accessorKey: 'opddate',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                >
-                    Date Registered
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => (
-            <div>{row.getValue('opddate')}</div>
         ),
     },
     {

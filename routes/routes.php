@@ -10,10 +10,6 @@ use App\Http\Controllers\OutpatientController;
 use App\Http\Controllers\WardController;
 
 // PUBLIC ROUTES
-Route::inertia('/', 'auth/login', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
-
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 
 // AUTH ONLY ROUTES
@@ -52,7 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Outpatient
     Route::inertia('outpatient', 'outpatient/outpatientDatatable')->name('outpatient');
-    Route::get('api/outpatient/outpatientDatatable', [OutpatientController::class, 'index'])->name('outpatient.index');
+    Route::get('api/outpatient/datatable', [OutpatientController::class, 'index'])->name('outpatient.datatable');
     Route::get('api/outpatient/stats', [OutpatientController::class, 'stats'])->name('outpatient.stats');
     Route::get('api/outpatient/create', [OutpatientController::class, 'create'])->name('outpatient.create');
     Route::post('api/outpatient', [OutpatientController::class, 'store'])->name('outpatient.store');
