@@ -49,14 +49,22 @@ function SelectTrigger({
       {children}
       <div className="flex items-center gap-1">
         {showClear && onClear && (
-          <button
-            type="button"
+          <span
+            role="button"
+            tabIndex={-1}
             onClick={handleClear}
-            className="pointer-events-auto flex items-center justify-center rounded-sm opacity-50 hover:opacity-100 transition-opacity"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                e.stopPropagation()
+                handleClear(e as any)
+              }
+            }}
+            className="pointer-events-auto flex items-center justify-center rounded-sm opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
             aria-label="Clear selection"
           >
             <XIcon className="size-4" />
-          </button>
+          </span>
         )}
         <SelectPrimitive.Icon asChild>
           <ChevronDownIcon className="size-4 opacity-50" />

@@ -385,10 +385,10 @@ export function DataTable<TData, TValue>({
                             <TabsTrigger
                                 key={tab.value}
                                 value={tab.value}
-                                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3"
+                                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-yellow-500 data-[state=active]:bg-yellow-500/10 data-[state=active]:text-yellow-700 dark:data-[state=active]:text-yellow-400 dark:data-[state=active]:border-yellow-400 dark:data-[state=active]:bg-yellow-400/10 data-[state=active]:shadow-none px-4 pb-3 transition-colors"
                             >
                                 {tab.label}
-                                <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-normal">
+                                <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-normal data-[state=active]:bg-yellow-500/20 dark:data-[state=active]:bg-yellow-400/20 data-[state=active]:text-yellow-700 dark:data-[state=active]:text-yellow-400">
                                     {getFilteredRowCount(tab).toLocaleString()}
                                 </span>
                             </TabsTrigger>
