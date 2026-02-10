@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Ward {
@@ -39,7 +40,7 @@ interface DataTableProps<TData, TValue> {
     onClearWard?: () => void;
     onTabChange?: (tabValue: string) => void;
     activeTabValue?: string;
-    tabCounts?: Record<string, number>; // Add this
+    tabCounts?: Record<string, number>;
 }
 
 export function DataTable<TData, TValue>({
@@ -71,6 +72,7 @@ export function DataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = useState({});
     const [activeTab, setActiveTab] = useState(activeTabValue || tabs?.[0]?.value || 'all');
+    const [searchValue, setSearchValue] = useState(''); // Add local search state
 
     useEffect(() => {
         if (activeTabValue !== undefined) {
@@ -138,12 +140,14 @@ export function DataTable<TData, TValue>({
                     {filterColumn && (
                         <Input
                             placeholder={filterPlaceholder}
-                            value={(table.getColumn(filterColumn)?.getFilterValue() as string) ?? ''}
+                            value={searchValue}
                             onChange={(event) => {
                                 const value = event.target.value;
-                                table.getColumn(filterColumn)?.setFilterValue(value);
+                                setSearchValue(value); // Update local state immediately
                                 if (manualPagination && onSearchChange) {
                                     onSearchChange(value);
+                                } else {
+                                    table.getColumn(filterColumn)?.setFilterValue(value);
                                 }
                             }}
                             className="max-w-sm"
@@ -161,60 +165,35 @@ export function DataTable<TData, TValue>({
                                     }
                                 }}
                             >
-                                <SelectTrigger className="w-[250px]" showClear={!!selectedWard} onClear={selectedWard ? onClearWard : undefined}>
+                                <SelectTrigger 
+                                    className={cn(
+                                        "w-[250px]",
+                                        selectedWard && "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 ring-yellow-500/20 focus:ring-yellow-500/30"
+                                    )}
+                                    showClear={!!selectedWard} 
+                                    onClear={selectedWard ? onClearWard : undefined}
+                                >
                                     <SelectValue placeholder="Select Ward">
                                         {selectedWardName || "All Wards"}
                                     </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
                                     {wards.map((ward) => (
-                                        <SelectItem key={ward.wardcode} value={ward.wardcode}>
+                                        <SelectItem 
+                                            key={ward.wardcode} 
+                                            value={ward.wardcode}
+                                            className={cn(
+                                                selectedWard === ward.wardcode && "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 font-medium"
+                                            )}
+                                        >
                                             {ward.wardname}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-                            
-                            {/* {selectedWard && onClearWard && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={onClearWard}
-                                    className="h-9 px-2"
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            )} */}
                         </div>
                     )}
                 </div>
-                
-                {/* <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
-                            Columns <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        {table
-                            .getAllColumns()
-                            .filter((column) => column.getCanHide())
-                            .map((column) => {
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
-                                );
-                            })}
-                    </DropdownMenuContent>
-                </DropdownMenu> */}
             </div>
 
             {/* main table */}

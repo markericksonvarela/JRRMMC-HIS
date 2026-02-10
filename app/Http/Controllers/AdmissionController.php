@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\AdmissionModel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB; // Add this import
 
 class AdmissionController extends Controller
 {
@@ -12,7 +13,8 @@ class AdmissionController extends Controller
         $perPage = $request->get('per_page', 100);
         $page = $request->get('page', 1);
         $ward = $request->get('ward', '');
-        $status = $request->get('status','');
+        $status = $request->get('status', '');
+        $search = $request->get('search', ''); // Add search parameter
 
         $query = AdmissionModel::getPatientsList();
 
@@ -24,6 +26,29 @@ class AdmissionController extends Controller
             $query->where('hadmlog.admstat', $status);
         }
 
+        // Add global search filter
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('hadmlog.hpercode', 'LIKE', "%{$search}%")
+                  ->orWhere(DB::raw("(
+                      RTRIM(LTRIM(hperson.patlast)) + ', ' +
+                      RTRIM(LTRIM(hperson.patfirst)) +
+                      CASE 
+                          WHEN hperson.patsuffix IS NULL OR hperson.patsuffix = 'NOTAP' OR RTRIM(LTRIM(hperson.patsuffix)) = ''
+                          THEN ''
+                          ELSE ' ' + RTRIM(LTRIM(hperson.patsuffix))
+                      END +
+                      CASE 
+                          WHEN hperson.patmiddle IS NULL OR RTRIM(LTRIM(hperson.patmiddle)) = ''
+                          THEN ''
+                          ELSE ', ' + RTRIM(LTRIM(hperson.patmiddle))
+                      END
+                  )"), 'LIKE', "%{$search}%")
+                  ->orWhere('hperson.patfirst', 'LIKE', "%{$search}%")
+                  ->orWhere('hperson.patlast', 'LIKE', "%{$search}%");
+            });
+        }
+
         $patient = $query->paginate($perPage, ['*'], 'page', $page);
 
         $baseQuery = AdmissionModel::getPatientsList();
@@ -31,9 +56,31 @@ class AdmissionController extends Controller
         if ($ward) {
             $baseQuery->where('hward.wardcode', $ward);
         }
+
+        if ($search) {
+            $baseQuery->where(function($q) use ($search) {
+                $q->where('hadmlog.hpercode', 'LIKE', "%{$search}%")
+                  ->orWhere(DB::raw("(
+                      RTRIM(LTRIM(hperson.patlast)) + ', ' +
+                      RTRIM(LTRIM(hperson.patfirst)) +
+                      CASE 
+                          WHEN hperson.patsuffix IS NULL OR hperson.patsuffix = 'NOTAP' OR RTRIM(LTRIM(hperson.patsuffix)) = ''
+                          THEN ''
+                          ELSE ' ' + RTRIM(LTRIM(hperson.patsuffix))
+                      END +
+                      CASE 
+                          WHEN hperson.patmiddle IS NULL OR RTRIM(LTRIM(hperson.patmiddle)) = ''
+                          THEN ''
+                          ELSE ', ' + RTRIM(LTRIM(hperson.patmiddle))
+                      END
+                  )"), 'LIKE', "%{$search}%")
+                  ->orWhere('hperson.patfirst', 'LIKE', "%{$search}%")
+                  ->orWhere('hperson.patlast', 'LIKE', "%{$search}%");
+            });
+        }
         
         $tabCounts = [
-            'all' => $baseQuery->count(),
+            'all' => (clone $baseQuery)->count(),
             'active' => (clone $baseQuery)->where('hadmlog.admstat', 'A')->count(),
             'discharged' => (clone $baseQuery)->where('hadmlog.admstat', 'I')->count(),
         ];
