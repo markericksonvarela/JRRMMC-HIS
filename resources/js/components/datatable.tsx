@@ -1,16 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Ward {
     wardcode: string;
     wardname: string;
+}
+
+interface Service {
+    tscode: string;
+    tsdesc: string;
 }
 
 interface DataTableProps<TData, TValue> {
@@ -41,6 +45,11 @@ interface DataTableProps<TData, TValue> {
     onTabChange?: (tabValue: string) => void;
     activeTabValue?: string;
     tabCounts?: Record<string, number>;
+    service?: Service[];
+    selectedService?: string;
+    selectedServiceName?: string;
+    onServiceChange?: (serviceCode: string, serviceName: string) => void;
+    onClearService?: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -63,6 +72,11 @@ export function DataTable<TData, TValue>({
     selectedWardName,
     onWardChange,
     onClearWard,
+    service,
+    selectedService,
+    selectedServiceName,
+    onServiceChange,
+    onClearService,
     onTabChange,
     activeTabValue,
     tabCounts,
@@ -72,7 +86,8 @@ export function DataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = useState({});
     const [activeTab, setActiveTab] = useState(activeTabValue || tabs?.[0]?.value || 'all');
-    const [searchValue, setSearchValue] = useState(''); // Add local search state
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const [localSearchValue, setLocalSearchValue] = useState('');
 
     useEffect(() => {
         if (activeTabValue !== undefined) {
@@ -132,28 +147,28 @@ export function DataTable<TData, TValue>({
         return data.filter((row: any) => row[tab.filterKey] === tab.filterValue).length;
     };
 
-    const TableContent = () => (
+    const tableContent = (
         <>
             {/* search patient, ward filter, and column visibility */}
             <div className="flex items-center justify-between gap-4 p-4 border-b">
                 <div className="flex items-center gap-2 flex-1">
                     {filterColumn && (
                         <Input
+                            ref={searchInputRef}
                             placeholder={filterPlaceholder}
-                            value={searchValue}
+                            value={localSearchValue}
                             onChange={(event) => {
                                 const value = event.target.value;
-                                setSearchValue(value); // Update local state immediately
-                                if (manualPagination && onSearchChange) {
+                                setLocalSearchValue(value);
+                                if (onSearchChange) {
                                     onSearchChange(value);
-                                } else {
-                                    table.getColumn(filterColumn)?.setFilterValue(value);
                                 }
                             }}
                             className="max-w-sm"
                         />
                     )}
                     
+                    {/* wards */}
                     {wards && wards.length > 0 && (
                         <div className="flex items-center gap-2">
                             <Select
@@ -165,28 +180,43 @@ export function DataTable<TData, TValue>({
                                     }
                                 }}
                             >
-                                <SelectTrigger 
-                                    className={cn(
-                                        "w-[250px]",
-                                        selectedWard && "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 ring-yellow-500/20 focus:ring-yellow-500/30"
-                                    )}
-                                    showClear={!!selectedWard} 
-                                    onClear={selectedWard ? onClearWard : undefined}
-                                >
+                                <SelectTrigger className="w-[250px]" showClear={!!selectedWard} onClear={selectedWard ? onClearWard : undefined}>
                                     <SelectValue placeholder="Select Ward">
                                         {selectedWardName || "All Wards"}
                                     </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
                                     {wards.map((ward) => (
-                                        <SelectItem 
-                                            key={ward.wardcode} 
-                                            value={ward.wardcode}
-                                            className={cn(
-                                                selectedWard === ward.wardcode && "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 font-medium"
-                                            )}
-                                        >
+                                        <SelectItem key={ward.wardcode} value={ward.wardcode}>
                                             {ward.wardname}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+
+                    {/* service */}
+                    {service && service.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <Select
+                                value={selectedService}
+                                onValueChange={(value) => {
+                                    const selected = service.find(s => s.tscode === value);
+                                    if (selected && onServiceChange) {
+                                        onServiceChange(selected.tscode, selected.tsdesc);
+                                    }
+                                }}
+                            >
+                                <SelectTrigger className="w-[250px]" showClear={!!selectedService} onClear={selectedService ? onClearService : undefined}>
+                                    <SelectValue placeholder="Select Service">
+                                        {selectedServiceName || "All Services"}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {service.map((svc) => (
+                                        <SelectItem key={svc.tscode} value={svc.tscode}>
+                                            {svc.tsdesc}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -350,7 +380,7 @@ export function DataTable<TData, TValue>({
     if (!tabs || tabs.length === 0) {
         return (
             <Card className="border border-sidebar-border/70">
-                <TableContent />
+                {tableContent}
             </Card>
         );
     }
@@ -376,7 +406,7 @@ export function DataTable<TData, TValue>({
                 </div>
                 {tabs.map((tab) => (
                     <TabsContent key={tab.value} value={tab.value} className="m-0">
-                        <TableContent />
+                        {tableContent}
                     </TabsContent>
                 ))}
             </Tabs>
