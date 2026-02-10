@@ -23,11 +23,14 @@ class AdmissionController extends Controller
         if ($status && in_array($status, ['A', 'I'])) {
             $query->where('hadmlog.admstat', $status);
         }
-        
 
         $patient = $query->paginate($perPage, ['*'], 'page', $page);
 
         $baseQuery = AdmissionModel::getPatientsList();
+
+        if ($ward) {
+            $baseQuery->where('hward.wardcode', $ward);
+        }
         
         $tabCounts = [
             'all' => $baseQuery->count(),
