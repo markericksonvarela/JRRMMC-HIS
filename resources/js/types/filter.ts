@@ -20,7 +20,7 @@ export interface AdmissionFilters {
 
 export interface EmergencyFilters {
     search?: string;
-    triageLevel?: string;
-    dateFrom?: string;
-    dateTo?: string;
+    service?: string;
+    start_date?: string;
+    end_date?: string;
 }

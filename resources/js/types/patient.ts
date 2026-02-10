@@ -9,6 +9,9 @@ export interface Patient {
     opdtime?: string;
     opddisp?: string;
     opdstat?: string;
+    erdate?: string;
+    ertime?: string;
+    erstat?: string;
 }
 
 export interface CancerPatient {

@@ -1,11 +1,11 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\OutpatientModel;
+use App\Models\EmergencyModel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class OutpatientController extends Controller
+class EmergencyController extends Controller
 {
     public function index(Request $request)
     {
@@ -15,14 +15,14 @@ class OutpatientController extends Controller
         $services = $request->get('services', '');
         $search = $request->get('search','');
 
-        $query = OutpatientModel::getPatientsList();
+        $query = EmergencyModel::getPatientsList();
 
         if ($services) {
             $query->where('htypser.tscode', $services);
         }
 
         if ($status && in_array($status, ['A', 'I'])) {
-            $query->where('hopdlog.opdstat', $status);
+            $query->where('herlog.erstat', $status);
         }
 
         if ($search) {
@@ -44,19 +44,23 @@ class OutpatientController extends Controller
                 ->orWhere('hperson.patlast', 'like', "%{$search}%")
                 ->orWhere('hperson.patfirst', 'like', "%{$search}%")
                 ->orWhere('hperson.patmiddle', 'like', "%{$search}%")
-                ->orWhere('hopdlog.hpercode', 'like', "%{$search}%")
-                ->orWhere('hopdlog.enccode', 'like', "%{$search}%");
+                ->orWhere('herlog.hpercode', 'like', "%{$search}%")
+                ->orWhere('herlog.enccode', 'like', "%{$search}%");
             });
         }
 
         $patient = $query->paginate($perPage, ['*'], 'page', $page);
 
-        $baseQuery = OutpatientModel::getPatientsList();
+        $baseQuery = EmergencyModel::getPatientsList();
+
+        if ($services) {
+            $baseQuery->where('htypser.tscode', $services);
+        }
         
         $tabCounts = [
             'all' => $baseQuery->count(),
-            'active' => (clone $baseQuery)->where('hopdlog.opdstat', 'A')->count(),
-            'discharged' => (clone $baseQuery)->where('hopdlog.opdstat', 'I')->count(),
+            'active' => (clone $baseQuery)->where('herlog.erstat', 'A')->count(),
+            'discharged' => (clone $baseQuery)->where('herlog.erstat', 'I')->count(),
         ];
 
         return response()->json([
@@ -74,20 +78,20 @@ class OutpatientController extends Controller
     public function show(string $enccode)
     {
         try {
-            $patient = OutpatientModel::getPatientByEnccode($enccode);
+            $patient = EmergencyModel::getPatientByEnccode($enccode);
 
             if (!$patient) {
-                return redirect()->route('outpatient')
+                return redirect()->route('emergency')
                     ->with('error', 'Patient not found.');
             }
 
-            return Inertia::render('outpatient/Show', [
-                'patient' => OutpatientModel::getPatientInformation($patient),
+            return Inertia::render('emergency/Show', [
+                'patient' => EmergencyModel::getPatientInformation($patient),
             ]);
         } catch (\Exception $e) {
-            \Log::error('Outpatient show error: ' . $e->getMessage());
+            \Log::error('Emergency show error: ' . $e->getMessage());
             
-            return redirect()->route('outpatient')
+            return redirect()->route('emergency')
                 ->with('error', 'Failed to load patient details.');
         }
     }
@@ -98,11 +102,11 @@ class OutpatientController extends Controller
             $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
             $endDate = $request->get('end_date', now()->format('Y-m-d'));
 
-            $stats = OutpatientModel::getStatistics($startDate, $endDate);
+            $stats = EmergencyModel::getStatistics($startDate, $endDate);
 
             return response()->json($stats);
         } catch (\Exception $e) {
-            \Log::error('Outpatient stats error: ' . $e->getMessage());
+            \Log::error('Emergency stats error: ' . $e->getMessage());
             
             return response()->json(['error' => 'Failed to load statistics.'], 500);
         }
@@ -110,28 +114,28 @@ class OutpatientController extends Controller
 
     public function create()
     {
-        return Inertia::render('outpatient/Create');
+        return Inertia::render('emergency/Create');
     }
 
     public function store(Request $request)
     {
         try {
             $validated = $request->validate([
-                'enccode' => 'required|string|unique:hopdlog,enccode',
+                'enccode' => 'required|string|unique:herlog,enccode',
                 'hpercode' => 'required|string',
                 'patsex' => 'required|string',
                 'patage' => 'required|integer',
                 'tscode' => 'required|string',
-                'opddate' => 'required|date',
-                'opdtime' => 'required',
+                'erdate' => 'required|date',
+                'ertime' => 'required',
             ]);
 
-            OutpatientModel::create($validated);
+            EmergencyModel::create($validated);
 
-            return redirect()->route('outpatient')
+            return redirect()->route('emergency')
                 ->with('success', 'Patient registered successfully.');
         } catch (\Exception $e) {
-            \Log::error('Outpatient store error: ' . $e->getMessage());
+            \Log::error('Emergency store error: ' . $e->getMessage());
             
             return back()
                 ->withInput()
@@ -142,14 +146,14 @@ class OutpatientController extends Controller
     public function destroy(string $enccode)
     {
         try {
-            $patient = OutpatientModel::where('enccode', $enccode)->firstOrFail();
+            $patient = EmergencyModel::where('enccode', $enccode)->firstOrFail();
             
-            $patient->update(['opdstat' => 'I']);
+            $patient->update(['erstat' => 'I']);
 
-            return redirect()->route('outpatient')
+            return redirect()->route('emergency')
                 ->with('success', 'Patient record deactivated successfully.');
         } catch (\Exception $e) {
-            \Log::error('Outpatient destroy error: ' . $e->getMessage());
+            \Log::error('Emergency destroy error: ' . $e->getMessage());
             
             return back()
                 ->with('error', 'Failed to deactivate patient record.');

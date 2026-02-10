@@ -29,7 +29,7 @@ export const patientColumns: ColumnDef<Patient>[] = [
     //     enableHiding: false,
     // },
     {
-        accessorKey: 'opddate',
+        accessorKey: 'erdate',
         header: ({ column }) => {
             return (
                 <Button
@@ -42,7 +42,7 @@ export const patientColumns: ColumnDef<Patient>[] = [
             );
         },
         cell: ({ row }) => {
-            const date = row.getValue('opddate') as string;
+            const date = row.getValue('erdate') as string;
             return date ? new Date(date).toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'short',
