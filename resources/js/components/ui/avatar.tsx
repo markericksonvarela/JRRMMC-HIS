@@ -48,4 +48,21 @@ function AvatarFallback({
   )
 }
 
-export { Avatar, AvatarImage, AvatarFallback }
+function AvatarBadge({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLSpanElement>) {
+  return (
+    <span
+      data-slot="avatar-badge"
+      className={cn(
+        "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+
+export { Avatar, AvatarImage, AvatarFallback, AvatarBadge }

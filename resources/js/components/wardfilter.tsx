@@ -87,14 +87,19 @@ export function WardFilter({ open, onClose, onSelect, department }: WardFilterPr
                                 value={selectedWard}
                                 onValueChange={setSelectedWard}
                             >
-                                <SelectTrigger 
+                                <SelectTrigger
                                     id="ward"
                                     className={cn(
-                                        selectedWard && "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 ring-yellow-500/20 focus:ring-yellow-500/30"
+                                        "w-full transition-colors",
+                                        "focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-0",
+                                        "data-[state=open]:ring-2 data-[state=open]:ring-yellow-500",
+                                        "data-[state=open]:border-yellow-500",
+                                        selectedWard &&
+                                        "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
                                     )}
-                                >
+                                    >
                                     <SelectValue placeholder="Select a ward" />
-                                </SelectTrigger>
+                                    </SelectTrigger>
                                 <SelectContent>
                                     {wards.map((ward) => (
                                         <SelectItem key={ward.wardcode} value={ward.wardcode}>
