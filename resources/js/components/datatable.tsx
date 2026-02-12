@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface Ward {
     wardcode: string;
@@ -180,16 +181,34 @@ export function DataTable<TData, TValue>({
                                     }
                                 }}
                             >
-                                <SelectTrigger className="w-[250px]" showClear={!!selectedWard} onClear={selectedWard ? onClearWard : undefined}>
+                                <SelectTrigger
+                                    className={cn(
+                                        "w-[250px] transition-colors",
+                                        "focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-0",
+                                        "data-[state=open]:ring-2 data-[state=open]:ring-yellow-500",
+                                        "data-[state=open]:border-yellow-500",
+                                        selectedWard &&
+                                        "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+                                    )}
+                                    >
                                     <SelectValue placeholder="Select Ward">
                                         {selectedWardName || "All Wards"}
                                     </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
+                                    </SelectTrigger>
+
+                                <SelectContent className="border-yellow-500/30">
                                     {wards.map((ward) => (
-                                        <SelectItem key={ward.wardcode} value={ward.wardcode}>
+                                        <SelectItem
+                                            key={ward.wardcode}
+                                            value={ward.wardcode}
+                                            className="
+                                                focus:bg-yellow-500/10
+                                                focus:text-yellow-700
+                                                dark:focus:text-yellow-400
+                                            "
+                                            >
                                             {ward.wardname}
-                                        </SelectItem>
+                                            </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
