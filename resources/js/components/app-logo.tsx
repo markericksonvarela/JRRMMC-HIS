@@ -2,23 +2,31 @@ import { useSidebar } from '@/components/ui/sidebar';
 
 export default function AppLogo() {
     const { state } = useSidebar();
-    
+
     return (
-        <>
-            <div className={`flex items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground transition-all ${state === 'collapsed' ? 'size-8' : 'size-10 aspect-square'}`}>
-                <img 
-                    src="/images/jrrmc_logo.svg" 
-                    alt="Jose Reyes Memorial Medical Center Logo" 
-                    className={`w-auto object-contain transition-all ${state === 'collapsed' ? 'h-16' : 'h-20'}`}
-                />
-            </div>
+        <div className="flex items-center gap-3">
+            {/* Circular Logo */}
+<div
+    className={`relative shrink-0 rounded-full overflow-hidden bg-white ${
+        state === 'collapsed' ? 'h-8 w-8' : 'h-12 w-12'
+    }`}
+>
+    <img
+        src="/images/jrrmc_logo.svg"
+        alt="Jose Reyes Memorial Medical Center Logo"
+        className="absolute inset-0 h-full w-full object-contain"
+    />
+</div>
+
+            {/* Text */}
             {state === 'expanded' && (
-                <div className="ml-1 grid flex-1 text-left text-sm">
-                    <span className="mb-0.5 text-wrap break-words leading-tight font-semibold">
+                <div className="text-sm leading-tight">
+                    <div className="font-semibold">
                         JOSE R. REYES MEMORIAL MEDICAL CENTER
-                    </span>
+                    </div>
+
                 </div>
             )}
-        </>
+        </div>
     );
 }

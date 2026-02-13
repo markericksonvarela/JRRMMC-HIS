@@ -38,11 +38,9 @@ export default function Profile({
             <SettingsLayout>
                 <div className="space-y-6">
                     <Heading
-                        variant="small"
                         title="Profile information"
                         description="Update your name and email address"
                     />
-
                     <Form
                         {...ProfileController.update.form()}
                         options={{
@@ -72,7 +70,7 @@ export default function Profile({
                                     />
                                 </div>
 
-                                <div className="grid gap-2">
+                                {/* <div className="grid gap-2">
                                     <Label htmlFor="email">Email address</Label>
 
                                     <Input
@@ -91,7 +89,7 @@ export default function Profile({
                                         className="mt-2"
                                         message={errors.email}
                                     />
-                                </div>
+                                </div> */}
 
                                 {/* {mustVerifyEmail &&
                                     auth.user.email_verified_at === null && (

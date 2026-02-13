@@ -8,7 +8,7 @@ import { admission } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/datatable';
 import { admissionHelper, AdmissionLog } from '@/helper/admissionHelper';
-import { WardFilter } from '@/components/wardfilter';
+import { WardFilter } from '@/components/common/wardfilter';
 import { ErrorAlert } from '@/components/common/errorAlert';
 import { EmptyState } from '@/components/common/emptyState';
 import { LoadingTable } from '@/components/common/loadingTable';

@@ -6,7 +6,7 @@ import { patrecord, admission, emergency, outpatient } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { HousePlus, Ambulance, ShieldPlus } from "lucide-react";
-import { WardFilter } from '@/components/wardfilter';
+import { WardFilter } from '@/components/common/wardfilter';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

@@ -87,6 +87,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Utilities
     Route::get('api/wards', [WardController::class, 'index'])->name('wards.index');
     Route::get('api/services', [ServicesController::class, 'index'])->name('services.index');
+
+Route::get('/settings/esignature', function () {
+    return Inertia::render('settings/esignature');
+})->middleware(['auth'])->name('settings.esignature');
 });
 
 require __DIR__.'/settings.php';

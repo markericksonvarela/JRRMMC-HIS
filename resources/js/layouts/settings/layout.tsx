@@ -9,13 +9,15 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
+import { esignature } from '@/routes/settings';
 import type { NavItem } from '@/types';
+import { Signature, SquareUserRound, Wallpaper } from 'lucide-react';
 
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: edit(),
-        icon: null,
+        icon: SquareUserRound,
     },
     // {
     //     title: 'Password',
@@ -30,8 +32,13 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Appearance',
         href: editAppearance(),
-        icon: null,
+        icon: Wallpaper,
     },
+{
+    title: 'eSignature',
+    href: esignature(),
+    icon: Signature,
+}
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
