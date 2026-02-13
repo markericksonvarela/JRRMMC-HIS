@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectVariants } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 interface Ward {
@@ -227,7 +227,13 @@ export function DataTable<TData, TValue>({
                                     }
                                 }}
                             >
-                                <SelectTrigger className="w-[250px]" showClear={!!selectedService} onClear={selectedService ? onClearService : undefined}>
+                                <SelectTrigger className={cn("w-[250px] transition-colors",
+                                        "focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-0",
+                                        "data-[state=open]:ring-2 data-[state=open]:ring-yellow-500",
+                                        "data-[state=open]:border-yellow-500",
+                                        selectedService || "All Services",
+                                        "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400")} 
+                                        showClear={!!selectedService} onClear={selectedService ? onClearService : undefined}>
                                     <SelectValue placeholder="Select Service">
                                         {selectedServiceName || "All Services"}
                                     </SelectValue>

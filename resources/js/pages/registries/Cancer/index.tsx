@@ -1,68 +1,76 @@
 import { Head, router } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { emergency } from '@/routes';
-import type { BreadcrumbItem, Patient, EmergencyFilters } from '@/types';
+import { cancer } from '@/routes';
+import type { BreadcrumbItem, CancerPatient, CancerFilters } from '@/types';
 import { DataTable } from '@/components/datatable';
-import { patientColumns } from './partials/erColumns'
-import axios from 'axios';
+import { patientColumns } from './partials/columns';
 import { TableSkeleton } from '@/components/skeleton-table';
 import { Card } from '@/components/ui/card';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Emergency Department',
-        href: emergency().url,
-    },
-];
-
-interface Service {
-    tscode: string;
-    tsdesc: string;
-}
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import axios from 'axios';
 
 interface Props {
     patients: {
-        data: Patient[];
+        data: CancerPatient[];
     };
-    filters: EmergencyFilters;
+    filters: CancerFilters;
     error?: string;
-    services?: string;
     tsdesc?: string;
 }
 
-const formTabs = [
+const breadcrumbs: BreadcrumbItem[] = [
     {
-        label: 'Active',
-        value: 'active',
-        filterKey: 'erstat',
-        filterValue: 'A',
-    },
-    {
-        label: 'Discharged',
-        value: 'discharged',
-        filterKey: 'erstat',
-        filterValue: 'I',
-    },
-    {
-        label: 'All',
-        value: 'all',
-        filterKey: 'erstat',
+        title: 'Cancer Registry',
+        href: cancer().url,
     },
 ];
 
-export default function EmergencyDepartment({ services, tsdesc, error }: Props) {
-    const [data, setData] = useState<Patient[]>([]);
+// can be adjusted to followups
+const formTabs = [
+    {
+        label: 'All',
+        value: 'all',
+        filterKey: 'followUpStatus',
+    },
+    {
+        label: 'Form 1',
+        value: 'form1',
+        filterKey: 'followUpStatus',
+        filterValue: 'Form 1',
+    },
+    {
+        label: 'Form 2',
+        value: 'form2',
+        filterKey: 'followUpStatus',
+        filterValue: 'Form 2',
+    },
+    {
+        label: 'Form 3',
+        value: 'form3',
+        filterKey: 'followUpStatus',
+        filterValue: 'Form 3',
+    },
+    {
+        label: 'Form 4',
+        value: 'form4',
+        filterKey: 'followUpStatus',
+        filterValue: 'Form 4',
+    },
+];
+
+export default function CancerDepartment({ error }: Props) {
+    const [data, setData] = useState<CancerPatient[]>([]);
     const [loading, setLoading] = useState(false);
     const [initialLoad, setInitialLoad] = useState(true);
     const [globalFilter, setGlobalFilter] = useState('');
     const [debouncedFilter, setDebouncedFilter] = useState('');
-    const [serviceList, setServiceList] = useState<Service[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [perPage, setPerPage] = useState(15);
-    const [activeTab, setActiveTab] = useState('active');
+    const [activeTab, setActiveTab] = useState('all');
     const [tabCounts, setTabCounts] = useState<Record<string, number>>({
         all: 0,
         active: 0,
@@ -70,18 +78,6 @@ export default function EmergencyDepartment({ services, tsdesc, error }: Props) 
     });
 
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-    useEffect(() => {
-        const fetchServices = async () => {
-            try {
-                const response = await axios.get('/api/services');
-                setServiceList(response.data.data);
-            } catch (error) {
-                console.error('Error fetching services:', error);
-            }
-        };
-        fetchServices();
-    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -94,13 +90,12 @@ export default function EmergencyDepartment({ services, tsdesc, error }: Props) 
                     statusFilter = currentTab.filterValue;
                 }
                 
-                const response = await axios.get('/api/emergency/datatable', {
+                const response = await axios.get('/api/cancer/datatable', {
                     params: {
                         page: currentPage,
                         per_page: perPage,
                         search: debouncedFilter,
                         status: statusFilter,
-                        services: services,
                     }
                 });
                 
@@ -111,7 +106,7 @@ export default function EmergencyDepartment({ services, tsdesc, error }: Props) 
                 setPerPage(response.data.per_page);
                 setTabCounts(response.data.tab_counts || tabCounts);
             } catch (error) {
-                console.error('Error fetching emergency data:', error);
+                console.error('Error fetching cancer data:', error);
             } finally {
                 setLoading(false);
                 setInitialLoad(false);
@@ -119,7 +114,7 @@ export default function EmergencyDepartment({ services, tsdesc, error }: Props) 
         };
 
         fetchData();
-    }, [currentPage, perPage, debouncedFilter, services, activeTab]);
+    }, [currentPage, perPage, debouncedFilter, activeTab]);
 
     const handleSearchChange = (search: string) => {
         setGlobalFilter(search);
@@ -131,7 +126,7 @@ export default function EmergencyDepartment({ services, tsdesc, error }: Props) 
         debounceTimerRef.current = setTimeout(() => {
             setDebouncedFilter(search);
             setCurrentPage(1);
-        }, 800);
+        }, 300);
     };
 
     useEffect(() => {
@@ -156,27 +151,10 @@ export default function EmergencyDepartment({ services, tsdesc, error }: Props) 
         setCurrentPage(1);
     };
 
-    const handleServiceChange = (serviceCode: string, serviceName: string) => {
-        router.get(emergency().url, {
-            services: serviceCode,
-            tsdesc: serviceName     
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
-    
-    const handleClearService = () => {
-        router.get(emergency().url, {}, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
-
     if (error) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
-                <Head title="Emergency Department" />
+                <Head title="Cancer Registry" />
                 <div className="flex h-full items-center justify-center p-4">
                     <Card className="p-6 max-w-md">
                         <div className="text-center">
@@ -198,40 +176,44 @@ export default function EmergencyDepartment({ services, tsdesc, error }: Props) 
     }
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Emergency Department" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-4">
-                {initialLoad ? (
-                    <Card className="border border-sidebar-border/70">
-                        <TableSkeleton rows={10} columns={9} />
-                    </Card>
-                ) : (
-                    <DataTable
-                        columns={patientColumns}
-                        data={data}
-                        filterColumn="enccode"
-                        filterPlaceholder="Search Patient"
-                        manualPagination={true}
-                        pageCount={lastPage}
-                        currentPage={currentPage}
-                        onPageChange={handlePageChange}
-                        perPage={perPage}
-                        onPerPageChange={handlePerPageChange}
-                        total={total}
-                        loading={loading}
-                        onSearchChange={handleSearchChange}
-                        tabs={formTabs}
-                        onTabChange={handleTabChange}
-                        activeTabValue={activeTab}
-                        tabCounts={tabCounts}
-                        service={serviceList}
-                        onServiceChange={handleServiceChange}
-                        onClearService={handleClearService}
-                        selectedService={services} 
-                        selectedServiceName={tsdesc}
-                    />
-                )}
-            </div>
-        </AppLayout>
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Cancer Registry" />
+                <div className="flex items-center justify-between">
+                    <Button
+                        onClick={() => router.get('cancer/cancer-form')}
+                        className="flex items-center gap-2"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add Patient
+                    </Button>
+                </div>
+                <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-4">
+                    {initialLoad ? (
+                        <Card className="border border-sidebar-border/70">
+                            <TableSkeleton rows={10} columns={9} />
+                        </Card>
+                    ) : (
+                        <DataTable
+                            columns={patientColumns}
+                            data={data}
+                            filterColumn="enccode"
+                            filterPlaceholder="Search Patient"
+                            manualPagination={true}
+                            pageCount={lastPage}
+                            currentPage={currentPage}
+                            onPageChange={handlePageChange}
+                            perPage={perPage}
+                            onPerPageChange={handlePerPageChange}
+                            total={total}
+                            loading={loading}
+                            onSearchChange={handleSearchChange}
+                            tabs={formTabs}
+                            onTabChange={handleTabChange}
+                            activeTabValue={activeTab}
+                            tabCounts={tabCounts}
+                        />
+                    )}
+                </div>
+            </AppLayout>
     );
 }
