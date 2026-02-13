@@ -88,19 +88,13 @@ export function AppSidebar() {
     return (
 <Sidebar
   collapsible="icon"
-  variant="sidebar"   // 🔥 change from "inset" to "sidebar"
-  className="flex h-full flex-col bg-zinc-950 border-none"
-><SidebarHeader className="bg-yellow-500 text-black">
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
+  variant="sidebar"
+  className="h-full bg-zinc-950 border-none shrink-0"
+>
+
+    <SidebarHeader className="bg-yellow-500 text-black h-16 flex items-center px-4 border-b border-yellow-600">
+    <AppLogo />
+</SidebarHeader>
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />

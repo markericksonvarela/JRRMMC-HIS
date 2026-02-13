@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SelectFilter } from './selectFilter';
 
 interface Ward {
     wardcode: string;
@@ -83,32 +84,22 @@ export function WardFilter({ open, onClose, onSelect, department }: WardFilterPr
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             </div>
                         ) : (
-                            <Select
-                                value={selectedWard}
-                                onValueChange={setSelectedWard}
-                            >
-                                <SelectTrigger
-                                    id="ward"
-                                    className={cn(
-                                        "w-full transition-colors",
-                                        "focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-0",
-                                        "data-[state=open]:ring-2 data-[state=open]:ring-yellow-500",
-                                        "data-[state=open]:border-yellow-500",
-                                        selectedWard &&
-                                        "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
-                                    )}
-                                    >
-                                    <SelectValue placeholder="Select a ward" />
-                                    </SelectTrigger>
-                                <SelectContent>
-                                    {wards.map((ward) => (
-                                        <SelectItem key={ward.wardcode} value={ward.wardcode}>
-                                            {ward.wardname}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        )}
+    <SelectFilter
+        value={selectedWard}
+        onChange={setSelectedWard}
+        options={wards.map((ward) => ({
+            value: ward.wardcode,
+            label: ward.wardname,
+        }))}
+        placeholder="Select a ward"
+        className={cn(
+            "w-full",
+            selectedWard &&
+                "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+        )}
+    />
+)
+}
                     </div>
                 </div>
 
