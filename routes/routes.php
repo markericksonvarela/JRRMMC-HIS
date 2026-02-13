@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -10,6 +11,15 @@ use App\Http\Controllers\OutpatientController;
 use App\Http\Controllers\EmergencyController;
 use App\Http\Controllers\WardController;
 use App\Http\Controllers\ServicesController;
+use App\Http\Controllers\CancerController;
+
+// ROOT ROUTE
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
+})->name('home');
 
 // PUBLIC ROUTES
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
@@ -27,10 +37,15 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Registries
     Route::inertia('trauma', 'trauma')->name('trauma');
-    Route::inertia('cancer', 'registries/Cancer/cancerRegistry')->name('cancer');
+
+    Route::inertia('cancer', 'registries/Cancer/index')->name('cancer');
     Route::inertia('cancer/cancer-form', 'registries/Cancer/cancerForm')->name('cancer.form1');
-    Route::inertia('geria', 'registries/Geria/geriaRegistry')->name('geria');
-    Route::inertia('skin', 'registries/Skin/skinRegistry')->name('skin');
+    Route::get('api/cancer/datatable', [CancerController::class, 'index'])->name('cancer.index');
+    Route::post('api/cancer', [CancerController::class, 'store'])->name('cancer.store');
+
+    Route::inertia('geria', 'registries/Geria/index')->name('geria');
+
+    Route::inertia('skin', 'registries/Skin/index')->name('skin');
     
     // Admission
     Route::inertia('admission', 'admission/index')->name('admission');
@@ -46,7 +61,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('api/admissions/{enccode}', [AdmissionController::class, 'destroy'])->name('admissions.destroy');
     
     // Emergency
-    Route::inertia('emergency', 'emergency/index')->name('emergency');
     Route::get('emergency', function (Request $request) { return Inertia::render('emergency/index', [
             'services' => $request->get('services'),
             'tsdesc' => $request->get('tsdesc'),
@@ -59,7 +73,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('api/emergency/{hpercode}', [EmergencyController::class, 'show'])->name('emergency.show');
     
     // Outpatient
-    Route::inertia('outpatient', 'outpatient/index')->name('outpatient');
     Route::get('outpatient', function (Request $request) { return Inertia::render('outpatient/index', [
             'services' => $request->get('services'),
             'tsdesc' => $request->get('tsdesc'),

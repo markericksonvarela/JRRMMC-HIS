@@ -33,11 +33,6 @@ interface Props {
 
 const formTabs = [
     {
-        label: 'All',
-        value: 'all',
-        filterKey: 'opdstat',
-    },
-    {
         label: 'Active',
         value: 'active',
         filterKey: 'opdstat',
@@ -48,6 +43,11 @@ const formTabs = [
         value: 'discharged',
         filterKey: 'opdstat',
         filterValue: 'I',
+    },
+    {
+        label: 'All',
+        value: 'all',
+        filterKey: 'opdstat',
     },
 ];
 
@@ -62,7 +62,7 @@ export default function OutpatientDepartment({ services, tsdesc, error }: Props)
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [perPage, setPerPage] = useState(15);
-    const [activeTab, setActiveTab] = useState('all');
+    const [activeTab, setActiveTab] = useState('active');
     const [tabCounts, setTabCounts] = useState<Record<string, number>>({
         all: 0,
         active: 0,
